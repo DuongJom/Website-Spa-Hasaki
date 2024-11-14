@@ -1,7 +1,10 @@
 from django.shortcuts import render
  
-def index(request):
-    return render(request, 'index.html')
+def login_options(request):
+    return render(request, 'login_options.html')
 
 def phone_verify(request):
     return render(request, 'phone_verification.html')
+
+def login(request):
+    return render(request, 'login.html')
