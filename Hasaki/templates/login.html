@@ -16,7 +16,8 @@
 
     <!-- Right Section (Form) -->
     <div class="w-1/2 bg-white flex items-center justify-center">
-        <form class="w-full max-w-md">
+        <form class="w-full max-w-md" action="/" method="post">
+            {% csrf_token %}
             <h2 class="text-2xl font-semibold text-center mb-6">Đăng nhập</h2>
 
             <!-- Email Input -->
@@ -38,11 +39,12 @@
                     <input type="checkbox" class="form-checkbox h-4 w-4 text-green-600">
                     <span class="ml-2">Nhớ tôi</span>
                 </label>
-                <a href="#" class="text-green-600 hover:underline">Quên mật khẩu?</a>
+                <a href="/forgot-password/phone-verify" class="text-green-600 hover:underline">Quên mật khẩu?</a>
             </div>
 
             <!-- Login Button -->
-            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">Đăng nhập</button>
+            <input type="submit" value="Đăng nhập" 
+                class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"/>
         </form>
     </div>
 </div>
