@@ -1,192 +1,61 @@
-{% extends "layout.html" %}
+{% extends "layout_content.html" %}
 {% load static %}
-{% block title %} Customers {% endblock %}
+{% block content_title %} Customers {% endblock %}
 
-{% block content %}
-<!-- Sidebar -->
-<div class="flex min-h-screen w-full">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-gray-50 border-r border-gray-200">
-        <div class="p-6">
-            <h2 class="text-xl font-bold">Trang chủ</h2>
-        </div>
-
-        <!-- Accordion Menu -->
-        <nav class="px-2">
-            <!-- Accordion Item 1 -->
-            <div class="flex flex-col flex-grow">
-                <button onclick="showCustomerMenu()" class="flex items-center justify-between w-full text-gray-700 hover:bg-green-100 p-2 rounded-md">
-                    <span class="font-medium flex flex-row">
-                        <img src="{% static 'img/menu_icon_customer.png' %}" class="sidebar-menu-item"/>
-                        Khách hàng
-                    </span>
-                    <svg id="dropDownCustomer" class="w-5 h-5 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <ul id="menuCustomer" class="pl-6 mt-2 space-y-2">
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/schedule.png' %}" class="w-5 h-5 mr-3"/>
-                            Tổng quan lịch hẹn
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-menu-item-active">
-                            <img src="{% static 'img/customer.png' %}" class="sidebar-menu-item"/>
-                            Danh sách khách hàng
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/messenger.png' %}" class="sidebar-menu-item"/>
-                            Messenger
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/response.png' %}" class="sidebar-menu-item"/>
-                            Phản hồi
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Accordion Item 2 -->
-            <div class="mt-4 flex flex-col flex-grow"> 
-                <button onclick="showEmployeeMenu()" class="flex items-center justify-between w-full text-gray-700 hover:bg-green-100 p-2 rounded-md">
-                    <span class="font-medium flex flex-row">
-                        <img src="{% static 'img/menu_icon_employee.png' %}" class="sidebar-menu-item"/>
-                        Nhân viên
-                    </span>
-                    <svg id="dropDownEmployee" class="w-5 h-5 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <ul id="menuEmployee" class="pl-6 mt-2 space-y-2">
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/report.png' %}" class="sidebar-menu-item"/>
-                            Báo cáo
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/appointment-book.png' %}" class="sidebar-menu-item"/>
-                            Lịch hẹn
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="sidebar-menu-item-inactive">
-                            <img src="{% static 'img/detail_information.png' %}" class="sidebar-menu-item"/>
-                            Thông tin chi tiết
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 p-6 bg-white w-full">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-green-700">Danh sách khách hàng</h1>
-            <div class="text-gray-500">
-                <div>Tên nhân viên</div>
-            </div>
-        </div>
-
-        <!-- Search -->
-        <div class="mb-4">
-            <input type="search" class="w-1/4 p-2 border border-gray-300 rounded-md" placeholder="Search">
-        </div>
-
-        <!-- Table -->
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-300 rounded-lg">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2 border-b text-left"># ID</th>
-                        <th class="px-4 py-2 border-b text-left">Tên khách hàng</th>
-                        <th class="px-4 py-2 border-b text-left">Ngày sinh</th>
-                        <th class="px-4 py-2 border-b text-left">Ngày tạo</th>
-                        <th class="px-4 py-2 border-b text-left">Số điện thoại</th>
-                        <th class="px-4 py-2 border-b text-left">Thêm mới</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Example row -->
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-4 py-2 border-b">#0001</td>
-                        <td class="px-4 py-2 border-b">My My</td>
-                        <td class="px-4 py-2 border-b">11.05.2002</td>
-                        <td class="px-4 py-2 border-b">27.11.2023</td>
-                        <td class="px-4 py-2 border-b">+994 51 123 4567</td>
-                        <td class="px-4 py-2 border-b">
-                            <a href="#" class="text-green-600 hover:underline">Chi tiết</a>
-                        </td>
-                    </tr>
-                    <!-- Repeat rows as needed -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="absolute mt-4 right-5">
-            <nav class="flex justify-center space-x-2">
-                <a href="#" class="px-3 py-2 bg-gray-200 rounded">1</a>
-                <a href="#" class="px-3 py-2 bg-gray-100 rounded">2</a>
-                <a href="#" class="px-3 py-2 bg-gray-100 rounded">3</a>
-                <span class="px-3 py-2">...</span>
-                <a href="#" class="px-3 py-2 bg-gray-100 rounded">40</a>
-            </nav>
+{% block detail %}
+<!-- Main Content -->
+<div class="flex-1 p-6 bg-white w-full">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-green-700">Danh sách khách hàng</h1>
+        <div class="text-gray-500">
+            <div>Tên nhân viên</div>
         </div>
     </div>
+
+    <!-- Search -->
+    <div class="mb-4">
+        <input type="search" class="w-1/4 p-2 border border-gray-300 rounded-md" placeholder="Search">
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 border-b text-left"># ID</th>
+                    <th class="px-4 py-2 border-b text-left">Tên khách hàng</th>
+                    <th class="px-4 py-2 border-b text-left">Ngày sinh</th>
+                    <th class="px-4 py-2 border-b text-left">Ngày tạo</th>
+                    <th class="px-4 py-2 border-b text-left">Số điện thoại</th>
+                    <th class="px-4 py-2 border-b text-left">Thêm mới</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Example row -->
+                <tr class="hover:bg-gray-100">
+                    <td class="px-4 py-2 border-b">#0001</td>
+                    <td class="px-4 py-2 border-b">My My</td>
+                    <td class="px-4 py-2 border-b">11.05.2002</td>
+                    <td class="px-4 py-2 border-b">27.11.2023</td>
+                    <td class="px-4 py-2 border-b">+994 51 123 4567</td>
+                    <td class="px-4 py-2 border-b">
+                        <a href="#" class="text-green-600 hover:underline">Chi tiết</a>
+                    </td>
+                </tr>
+                <!-- Repeat rows as needed -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="absolute mt-4 right-5">
+        <nav class="flex justify-center space-x-2">
+            <a href="#" class="px-3 py-2 bg-gray-200 rounded">1</a>
+            <a href="#" class="px-3 py-2 bg-gray-100 rounded">2</a>
+            <a href="#" class="px-3 py-2 bg-gray-100 rounded">3</a>
+            <span class="px-3 py-2">...</span>
+            <a href="#" class="px-3 py-2 bg-gray-100 rounded">40</a>
+        </nav>
+    </div>
 </div>
-<script type="text/javascript">
-    let isOpenCustomer = true;
-    let isOpenEmployee = true;
-
-    const showCustomerMenu = () => {
-        const dropDownCustomerMenu = document.getElementById('dropDownCustomer');
-        const menuCustomer = document.getElementById('menuCustomer');
-
-        if (dropDownCustomerMenu.classList.contains('rotate-180')){
-            dropDownCustomerMenu.classList.remove('rotate-180');
-        }
-        else{
-            dropDownCustomerMenu.classList.add('rotate-180');
-        }
-
-        isOpenCustomer = !isOpenCustomer;
-        
-        if(!isOpenCustomer){
-            menuCustomer.classList.add('hidden');
-        }
-        else{
-            menuCustomer.classList.remove('hidden');
-        }
-    }
-
-    const showEmployeeMenu = () => {
-        const dropDownEmployee = document.getElementById('dropDownEmployee');
-        const menuEmployee = document.getElementById('menuEmployee');
-        
-        if (dropDownEmployee.classList.contains('rotate-180')){
-            dropDownEmployee.classList.remove('rotate-180');
-        }
-        else{
-            dropDownEmployee.classList.add('rotate-180');
-        }
-
-        isOpenEmployee = !isOpenEmployee;
-        
-        if(!isOpenEmployee){
-            menuEmployee.classList.add('hidden');
-        }
-        else{
-            menuEmployee.classList.remove('hidden');
-        }
-    }
-</script>
 {% endblock %}

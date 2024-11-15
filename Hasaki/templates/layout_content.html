@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}
+    {% block content_title %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<!-- Sidebar -->
+<div class="flex min-h-screen w-full">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-50 border-r border-gray-200">
+        <div class="p-6">
+            <h2 class="text-xl font-bold">Trang chủ</h2>
+        </div>
+
+        <!-- Accordion Menu -->
+        <nav class="px-2">
+            <!-- Accordion Item 1 -->
+            <div class="flex flex-col flex-grow">
+                <button onclick="showCustomerMenu()" class="flex items-center justify-between w-full text-gray-700 hover:bg-green-100 p-2 rounded-md">
+                    <span class="font-medium flex flex-row">
+                        <img src="{% static 'img/menu_icon_customer.png' %}" class="sidebar-menu-item"/>
+                        Khách hàng
+                    </span>
+                    <svg id="dropDownCustomer" class="w-5 h-5 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <ul id="menuCustomer" class="pl-6 mt-2 space-y-2">
+                    <li>
+                        <a href="/schedules" class="sidebar-menu-item-normal {% if request.path == '/schedules' %} highlight {% endif %}">
+                            <img src="{% static 'img/schedule.png' %}" class="w-5 h-5 mr-3"/>
+                            Tổng quan lịch hẹn
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/customers" class="sidebar-menu-item-normal {% if request.path == '/customers' %} highlight {% endif %}">
+                            <img src="{% static 'img/customer.png' %}" class="sidebar-menu-item"/>
+                            Danh sách khách hàng
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/messenger" class="sidebar-menu-item-normal {% if request.path == '/messenger' %} highlight {% endif %}">
+                            <img src="{% static 'img/messenger.png' %}" class="sidebar-menu-item"/>
+                            Messenger
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/reply" class="sidebar-menu-item-normal {% if request.path == '/reply' %} highlight {% endif %}">
+                            <img src="{% static 'img/reply.png' %}" class="sidebar-menu-item"/>
+                            Phản hồi
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Accordion Item 2 -->
+            <div class="mt-4 flex flex-col flex-grow"> 
+                <button onclick="showEmployeeMenu()" class="flex items-center justify-between w-full text-gray-700 hover:bg-green-100 p-2 rounded-md">
+                    <span class="font-medium flex flex-row">
+                        <img src="{% static 'img/menu_icon_employee.png' %}" class="sidebar-menu-item"/>
+                        Nhân viên
+                    </span>
+                    <svg id="dropDownEmployee" class="w-5 h-5 transition-transform duration-200 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <ul id="menuEmployee" class="pl-6 mt-2 space-y-2">
+                    <li>
+                        <a href="/reports" class="sidebar-menu-item-normal {% if request.path == '/reports' %} highlight {% endif %}">
+                            <img src="{% static 'img/report.png' %}" class="sidebar-menu-item"/>
+                            Báo cáo
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/appointments" class="sidebar-menu-item-normal {% if request.path == '/appointments' %} highlight {% endif %}">
+                            <img src="{% static 'img/appointment-book.png' %}" class="sidebar-menu-item"/>
+                            Lịch hẹn
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/detail-information" class="sidebar-menu-item-normal {% if request.path == '/detail-information' %} highlight {% endif %}">
+                            <img src="{% static 'img/detail_information.png' %}" class="sidebar-menu-item"/>
+                            Thông tin chi tiết
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+
+    {% block detail %}{% endblock %}
+</div>
+<script type="text/javascript">
+    let isOpenCustomer = true;
+    let isOpenEmployee = true;
+
+    const showCustomerMenu = () => {
+        const dropDownCustomerMenu = document.getElementById('dropDownCustomer');
+        const menuCustomer = document.getElementById('menuCustomer');
+
+        if (dropDownCustomerMenu.classList.contains('rotate-180')){
+            dropDownCustomerMenu.classList.remove('rotate-180');
+        }
+        else{
+            dropDownCustomerMenu.classList.add('rotate-180');
+        }
+
+        isOpenCustomer = !isOpenCustomer;
+        
+        if(!isOpenCustomer){
+            menuCustomer.classList.add('hidden');
+        }
+        else{
+            menuCustomer.classList.remove('hidden');
+        }
+    }
+
+    const showEmployeeMenu = () => {
+        const dropDownEmployee = document.getElementById('dropDownEmployee');
+        const menuEmployee = document.getElementById('menuEmployee');
+        
+        if (dropDownEmployee.classList.contains('rotate-180')){
+            dropDownEmployee.classList.remove('rotate-180');
+        }
+        else{
+            dropDownEmployee.classList.add('rotate-180');
+        }
+
+        isOpenEmployee = !isOpenEmployee;
+        
+        if(!isOpenEmployee){
+            menuEmployee.classList.add('hidden');
+        }
+        else{
+            menuEmployee.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}

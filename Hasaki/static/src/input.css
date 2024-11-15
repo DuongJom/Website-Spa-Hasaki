@@ -7,11 +7,11 @@
         @apply w-5 h-5 mr-3;
     }
 
-    .sidebar-menu-item-active{
-        @apply text-green-600 font-bold underline rounded-md flex flex-row;
+    .highlight {
+        @apply text-green-600 font-bold underline;
     }
 
-    .sidebar-menu-item-inactive{
+    .sidebar-menu-item-normal {
         @apply text-gray-700 hover:bg-green-100 rounded-md flex flex-row;
     }
 }

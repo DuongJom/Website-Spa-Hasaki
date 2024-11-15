@@ -24,6 +24,6 @@ urlpatterns = [
     path('login-options', login_options, name='login-options'),
     path('forgot-password/phone-verify', phone_verify, name='phone-verify'),
     path('reset-password', reset_password, name='reset-password'),
-    path('employee/appointments', get_list_appointments, name='employee-appointments'),
+    path('appointments', get_list_appointments, name='appointments'),
     path('customers', customers, name='customers')
 ]
