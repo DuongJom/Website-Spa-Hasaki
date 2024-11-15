@@ -26,3 +26,7 @@ def reset_password(request):
 def get_list_appointments(request):
     if request.method == 'GET':
         return render(request,'appointments.html')
+    
+def customers(request):
+    if request.method == 'GET':
+        return render(request,'customers.html')

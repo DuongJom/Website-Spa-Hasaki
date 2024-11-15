@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import login_options, phone_verify, login, reset_password, get_list_appointments
+from .views import login_options, phone_verify, login, reset_password, get_list_appointments, customers
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +25,5 @@ urlpatterns = [
     path('forgot-password/phone-verify', phone_verify, name='phone-verify'),
     path('reset-password', reset_password, name='reset-password'),
     path('employee/appointments', get_list_appointments, name='employee-appointments'),
+    path('customers', customers, name='customers')
 ]
