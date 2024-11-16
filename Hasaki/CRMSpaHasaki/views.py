@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
-from SpaHasaki.models import Customer
+from datetime import datetime as dt, timedelta
+import datetime
+from SpaHasaki.models import Customer, Appointment
  
 def login_options(request):
     if request.method == 'GET':
@@ -25,9 +27,41 @@ def reset_password(request):
         return render(request, 'new_password.html')
     return redirect('/')
 
-def get_list_appointments(request):
+def schedule(request):
     if request.method == 'GET':
-        return render(request,'appointments.html')
+        appointments = [
+            {
+                "appointment": Appointment(start_time=dt.now(), 
+                        end_time=(dt.now() + timedelta(minutes=30)),
+                        status=1),
+                "customer_name": "Customer A",
+                "phone":"0987654321"
+            },
+            {
+                "appointment": Appointment(start_time=dt.now() + timedelta(minutes=30), 
+                        end_time=(dt.now() + timedelta(minutes=60)),
+                        status=0),
+                "customer_name": "Customer B",
+                "phone":"0975312468"
+            },
+            {
+                "appointment": Appointment(start_time=dt.now() + timedelta(minutes=60), 
+                        end_time=(dt.now() + timedelta(minutes=90)),
+                        status=2),
+                "customer_name": "Customer C",
+                "phone":"0864213579"
+            }
+        ]
+
+        times = [i for i in range(9,21)]
+        datas = dict()
+        for t in times:
+            key = datetime.time(hour=t).strftime("%H:%M")
+            datas[key] = []
+            for appointment in appointments:
+                if appointment['appointment'].start_time.hour == t:
+                    datas[key].append(appointment)
+        return render(request,'appointments.html', {"datas": datas})
     
 def customers(request):
     if request.method == 'GET':
