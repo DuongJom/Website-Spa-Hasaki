@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta
 import datetime
-from SpaHasaki.models import Customer, Appointment
+from models import Customer, Appointment
  
 def login_options(request):
     if request.method == 'GET':
@@ -54,14 +54,14 @@ def schedule(request):
         ]
 
         times = [i for i in range(9,21)]
-        datas = dict()
+        data = dict()
         for t in times:
             key = datetime.time(hour=t).strftime("%H:%M")
-            datas[key] = []
+            data[key] = []
             for appointment in appointments:
                 if appointment['appointment'].start_time.hour == t:
-                    datas[key].append(appointment)
-        return render(request,'../templates/appointments.html', {"datas": datas})
+                    data[key].append(appointment)
+        return render(request,'../templates/appointments.html', {"data": data})
     
 def customers(request):
     if request.method == 'GET':
