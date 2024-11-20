@@ -4,7 +4,7 @@ from django.db import models
 class Customer(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, null=False)
-    gender = models.IntegerField(null=False, default=0) # 0:Male, 1:Female
+    gender = models.IntegerField(null=False, default=0) # 0:Male, 1:Female, 2:Other
     date_of_birth = models.DateTimeField(auto_now_add=True)
     phone_number = models.CharField(max_length=10, null=True)
     email = models.EmailField(max_length=255, null=True)
