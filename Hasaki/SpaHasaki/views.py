@@ -3,8 +3,16 @@ from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta
 import datetime
-from models import Customer, Appointment
+from .models import Customer, Appointment
  
+def home(request):
+    if request.method == "GET":
+        return render(request,'../templates/home.html')
+    
+def appointment_booking(request):
+    if request.method == "GET":
+        return render(request,'../templates/appointment_booking.html')
+    
 def login_options(request):
     if request.method == 'GET':
         return render(request, '../templates/login_options.html')
@@ -66,30 +74,30 @@ def schedule(request):
 def customers(request):
     if request.method == 'GET':
         customers = [
-            Customer(id="001", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="002", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="003", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="004", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="005", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="006", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="007", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="008", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="009", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="010", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="011", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="012", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="013", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="014", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="015", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="016", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="017", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="018", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="019", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="020", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
-            Customer(id="021", name="My My", date_of_birth="11.05.2002", date_create="27.03.2023",phone_number="0994511234"),
-            Customer(id="022", name="Hải Yến", date_of_birth="01.01.2002", date_create="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="001", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="002", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="003", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="004", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="005", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="006", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="007", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="008", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="009", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="010", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="011", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="012", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="013", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="014", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="015", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="016", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="017", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="018", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="019", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="020", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
+            Customer(customer_id="021", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
+            Customer(customer_id="022", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
         ]
-        paginator = Paginator(customers, 12)
+        paginator = Paginator(customers, 10)
         page_number = request.GET.get('page')
         if not page_number:
             page_number = 1

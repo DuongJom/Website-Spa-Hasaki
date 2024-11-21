@@ -37,23 +37,21 @@
         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
             <thead>
                 <tr>
-                    <th class="px-4 py-2 border-b text-left"># ID</th>
+                    <th class="px-4 py-2 border-b text-left">Mã khách hàng</th>
                     <th class="px-4 py-2 border-b text-left">Tên khách hàng</th>
-                    <th class="px-4 py-2 border-b text-left">Ngày sinh</th>
-                    <th class="px-4 py-2 border-b text-left">Ngày tạo</th>
                     <th class="px-4 py-2 border-b text-left">Số điện thoại</th>
-                    <th class="px-4 py-2 border-b text-left"></th>
+                    <th class="px-4 py-2 border-b text-left">Ngày tạo</th>
+                    <th class="px-4 py-2 border-b text-left">Xem chi tiết</th>
                 </tr>
             </thead>
             <tbody>
                 {% for customer in customers %}
                     <!-- Example row -->
                     <tr class="hover:bg-gray-100 even:bg-gray-100 odd:bg-white">
-                        <td class="px-4 py-2 border-b">{{customer.id}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.name}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.date_of_birth}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.date_create}}</td>
+                        <td class="px-4 py-2 border-b">{{customer.customer_id}}</td>
+                        <td class="px-4 py-2 border-b">{{customer.customer_name}}</td>
                         <td class="px-4 py-2 border-b">{{customer.phone_number}}</td>
+                        <td class="px-4 py-2 border-b">{{customer.created_date}}</td>
                         <td class="px-4 py-2 border-b">
                             <div class="space-x-3 flex flex-row">
                                 <a href="#" class="text-green-600 hover:underline">

@@ -1,0 +1,31 @@
+{% extends "layout.html"%}
+{% load static %}
+{% block title %} 
+    {% block home_title %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col w-screen h-screen">
+    <!-- Navbar -->
+    <nav class="bg-green-600 px-4 py-2 text-white flex justify-between items-center h-auto">
+        <div class="text-xl font-bold">
+            <a href="#" class="text-white">HASAKI.VN</a>
+        </div>
+        <div class="flex space-x-6">
+            <a href="/booking" class="hover:text-gray-300 {% if request.path == '/booking' %} underline text-white font-semibold {% endif %}">Đặt hẹn</a>
+            <a href="#" class="hover:text-gray-300">Yêu cầu hỗ trợ</a>
+        </div>
+        <div class="text-gray-500 flex flex-row">
+            <a href="/login" class="w-auto h-auto bg-transparent">
+                <img src="{% static 'img/user.png' %}" class="w-10 h-10 ml-3 rounded-full"/>
+            </a>
+            <div class="flex flex-col text-black">
+                <p class="font-semibold text-black text-center grid-rows-1 grid-cols-2">Đăng nhập</p>
+                <p class="text-sm italic">Tài khoản nhân viên</p>
+            </div>
+        </div>
+    </nav>
+
+    {% block home_content %}{% endblock %}
+</div>
+{% endblock %}
