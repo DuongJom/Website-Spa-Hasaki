@@ -2,20 +2,53 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta
-import datetime
-from .models import Customer, Appointment
+from .models import Customer, Appointment, Service
+from .helpers import get_appointment, read_data
  
 def home(request):
     if request.method == "GET":
         return render(request,'../templates/home.html')
     
+@csrf_protect
 def appointment_booking(request):
     if request.method == "GET":
-        return render(request,'../templates/appointment_booking.html')
+        services = Service.objects.all()
+        context = {
+            'isSuccess': False,
+            'services': services
+        }
+        return render(request,'../templates/appointment_booking.html', {'context': context})
     
-def login_options(request):
-    if request.method == 'GET':
-        return render(request, '../templates/login_options.html')
+    # Check validity of fields on form
+    customer_name = request.POST.get('name')
+    phone = request.POST.get('phone')
+    email = request.POST.get('email')
+    note = request.POST.get('note')
+    service = request.POST.get('service')
+    appointment_date = request.POST.get('appointment_date')
+    start_time = request.POST.get('start_time')
+    end_time = dt.combine(dt.today(), dt.strptime(start_time, '%H:%M').time()) + timedelta(hours=1)
+
+    if not customer_name or not phone or not email or not service or \
+        not appointment_date or not start_time:
+        return render(request, '../templates/appointment_booking.html', {'isSuccess': False})
+    
+    service_obj = Service.objects.filter(service_id=service).values()
+
+    context = {
+        'isSuccess': True,
+        'customer_name': customer_name,
+        'phone': phone,
+        'email': email,
+        'service': service_obj[0]['service_name'] if service_obj else "Không dịch vụ",
+        'appointment_date': appointment_date,
+        'note': note,
+        'start_time': start_time,
+        'end_time': f"{str(end_time.time().hour).zfill(2)}:{str(end_time.time().minute).zfill(2)}",
+        'start_clock_type': "AM" if int(str(start_time).split(":")[0]) < 12 else "PM",
+        'end_clock_type': "AM" if end_time.time().hour < 12 else "PM"
+    }
+    return render(request, '../templates/appointment_booking.html', {'context': context})
 
 @csrf_protect
 def phone_verify(request):
@@ -27,7 +60,7 @@ def phone_verify(request):
 def login(request):
     if request.method == 'GET':
         return render(request, '../templates/login.html')
-    return redirect("/login-options")
+    return redirect("/schedules")
 
 @csrf_protect
 def reset_password(request):
@@ -37,70 +70,38 @@ def reset_password(request):
 
 def schedule(request):
     if request.method == 'GET':
-        appointments = [
-            {
-                "appointment": Appointment(start_time=dt.now(), 
-                        end_time=(dt.now() + timedelta(minutes=30)),
-                        status=1),
-                "customer_name": "Customer A",
-                "phone":"0987654321"
-            },
-            {
-                "appointment": Appointment(start_time=dt.now() + timedelta(minutes=30), 
-                        end_time=(dt.now() + timedelta(minutes=60)),
-                        status=0),
-                "customer_name": "Customer B",
-                "phone":"0975312468"
-            },
-            {
-                "appointment": Appointment(start_time=dt.now() + timedelta(minutes=60), 
-                        end_time=(dt.now() + timedelta(minutes=90)),
-                        status=2),
-                "customer_name": "Customer C",
-                "phone":"0864213579"
-            }
-        ]
-
-        times = [i for i in range(9,21)]
-        data = dict()
-        for t in times:
-            key = datetime.time(hour=t).strftime("%H:%M")
-            data[key] = []
-            for appointment in appointments:
-                if appointment['appointment'].start_time.hour == t:
-                    data[key].append(appointment)
-        return render(request,'../templates/appointments.html', {"data": data})
+        context = {
+            'isShowModal': False,
+            'data': get_appointment(),
+            'dataModal': None
+        }
+        return render(request,'../templates/appointments.html', {"context": context})
     
 def customers(request):
     if request.method == 'GET':
-        customers = [
-            Customer(customer_id="001", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="002", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="003", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="004", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="005", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="006", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="007", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="008", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="009", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="010", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="011", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="012", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="013", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="014", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="015", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="016", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="017", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="018", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="019", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="020", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-            Customer(customer_id="021", customer_name="My My", created_date="27.03.2023",phone_number="0994511234"),
-            Customer(customer_id="022", customer_name="Hải Yến", created_date="27.03.2023",phone_number="0987654321"),
-        ]
+        lst_customers = read_data("Customers")
+        for data in lst_customers:
+            customer = Customer(customer_id=data['customer_id'],
+                                customer_name=data['customer_name'],
+                                phone_number=data['phone_number'],
+                                email=data['email'],
+                                created_date=data['created_date'],
+                                is_delete=data['is_delete'])
+            customer.save()
+        customers = Customer.objects.all().values()
         paginator = Paginator(customers, 10)
         page_number = request.GET.get('page')
         if not page_number:
             page_number = 1
         
-        page_customers = paginator.get_page(page_number)
-        return render(request,'../templates/customers.html', {'customers': page_customers})
+        customers_per_page = paginator.get_page(page_number)
+        return render(request,'../templates/customers.html', {'customers': customers_per_page})
+    
+def show_detail_appointment(request, id):
+    appointment = Appointment.objects.filter(appointment_id=id).values()
+    context = {
+        'isShowModal': True,
+        'data': get_appointment(),
+        'dataModal': appointment
+    }
+    return render(request,'../templates/appointment.html', {'context': context})

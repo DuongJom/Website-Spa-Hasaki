@@ -36,23 +36,22 @@
     <div class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
             <thead>
-                <tr>
-                    <th class="px-4 py-2 border-b text-left">Mã khách hàng</th>
-                    <th class="px-4 py-2 border-b text-left">Tên khách hàng</th>
-                    <th class="px-4 py-2 border-b text-left">Số điện thoại</th>
-                    <th class="px-4 py-2 border-b text-left">Ngày tạo</th>
-                    <th class="px-4 py-2 border-b text-left">Xem chi tiết</th>
+                <tr class="text-center">
+                    <th class="px-4 py-2 border-2">Mã khách hàng</th>
+                    <th class="px-4 py-2 border-2">Tên khách hàng</th>
+                    <th class="px-4 py-2 border-2">Số điện thoại</th>
+                    <th class="px-4 py-2 border-2">Ngày tạo</th>
+                    <th class="px-4 py-2 border-2">Xem chi tiết</th>
                 </tr>
             </thead>
             <tbody>
                 {% for customer in customers %}
-                    <!-- Example row -->
                     <tr class="hover:bg-gray-100 even:bg-gray-100 odd:bg-white">
-                        <td class="px-4 py-2 border-b">{{customer.customer_id}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.customer_name}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.phone_number}}</td>
-                        <td class="px-4 py-2 border-b">{{customer.created_date}}</td>
-                        <td class="px-4 py-2 border-b">
+                        <td class="text-center px-4 py-2 border-2">{{customer.customer_id}}</td>
+                        <td class="text-left px-4 py-2 border-2">{{customer.customer_name}}</td>
+                        <td class="text-left px-4 py-2 border-2">{{customer.phone_number}}</td>
+                        <td class="text-left px-4 py-2 border-2">{{customer.created_date}}</td>
+                        <td class="text-center px-4 py-2 border-2">
                             <div class="space-x-3 flex flex-row">
                                 <a href="#" class="text-green-600 hover:underline">
                                     <img src="{% static 'img/detail.png' %}" class="w-5 h-5"/>
@@ -67,13 +66,19 @@
                         </td>
                     </tr>
                 {% empty %}
-                    <p>No items available.</p>
+                    <tr class="text-center">
+                        <td></td>
+                        <td></td>
+                        <td>No data available.</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 {% endfor %}
-                <!-- Repeat rows as needed -->
             </tbody>
         </table>
     </div>
 
+    {% if customers|length > 0 %}
     <!-- Pagination controls -->
     <div class="absolute mt-4 right-5">
         <nav aria-label="Page navigation">
@@ -114,5 +119,6 @@
             </ul>
         </nav>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

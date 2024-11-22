@@ -2,3 +2,5 @@ Django==5.1.3
 django-compressor
 gspread 
 oauth2client
+selenium
+bs4

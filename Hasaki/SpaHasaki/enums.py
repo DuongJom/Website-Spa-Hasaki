@@ -5,7 +5,11 @@ class GenderType(Enum):
     FEMALE = 1
     OTHER = 2
 
-class AppointmentStatus(Enum):
+class AppointmentStatusType(Enum):
     CANCEL = 0
     COMPLETE = 1
     INCOMPLETE = 2
+
+class DeletedType(Enum):
+    AVAILABLE = 0
+    DELETED = 1
