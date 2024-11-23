@@ -151,10 +151,12 @@ def schedules(request):
         month = request.GET.get('month')
         day = request.GET.get('day')
 
+        today = dt.today().date().strftime("%Y-%m-%d")
+
         # Convert to integers (with defaults for current year, month, and day)
-        year = int(year) if year else dt.today().year
-        month = int(month) if month else dt.today().month
-        day = int(day) if day else dt.today().day
+        year = int(year) if year else int(today.split('-')[0])
+        month = int(month) if month else int(today.split('-')[1])
+        day = int(day) if day else int(today.split('-')[2])
         appointments = get_appointment(year=year, month=month, day=day)
         data = dict()
 
@@ -168,7 +170,7 @@ def schedules(request):
                     'service':Service.objects.get(service_id=item['appointment_info']['service_id'])
                 }
                 data[key].append(info)
-                
+
         context = {
             'data': data,
             'filterDate': date(year,month,day).strftime('%Y-%m-%d')
