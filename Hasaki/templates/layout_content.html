@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% load static %}
+{% load tz %}
 {% block title %}
     {% block content_title %}{% endblock %}
 {% endblock %}
@@ -31,7 +32,7 @@
                 </button>
                 <ul id="menuCustomer" class="pl-6 mt-2 space-y-2">
                     <li>
-                        <a href="/schedules" class="sidebar-menu-item-normal {% if request.path == '/schedules' %} highlight {% endif %}">
+                        <a href="/schedules?year={% now 'Y' %}&month={% now 'M' %}&day={% now 'd' %}" class="sidebar-menu-item-normal {% if request.path == '/schedules' %} highlight {% endif %}">
                             <img src="{% static 'img/schedule.png' %}" class="w-5 h-5 mr-3"/>
                             Tổng quan lịch hẹn
                         </a>

@@ -1,5 +1,4 @@
 from django.db import models
-from .enums import DeletedType
 
 # Create your models here.
 class Customer(models.Model):
@@ -8,12 +7,13 @@ class Customer(models.Model):
     phone_number = models.CharField(max_length=10, null=True)
     email = models.EmailField(max_length=255, null=True)
     created_date = models.DateTimeField(null=False, auto_now=True)
-    is_delete = models.IntegerField(null=False, default=DeletedType.AVAILABLE)
+    is_delete = models.IntegerField(null=False, default=0)
 
 class Service(models.Model):
     service_id = models.AutoField(primary_key=True)
     service_name = models.CharField(max_length=255, null=False)
     description = models.TextField(max_length=1024, null=True)
+    is_delete = models.IntegerField(null=False, default=0)
 
 class Employee(models.Model):
     employee_id = models.AutoField(primary_key=True)
@@ -25,30 +25,30 @@ class Employee(models.Model):
 
 class Appointment(models.Model):
     appointment_id = models.AutoField(primary_key=True)
-    customer_id = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
-    service_id = models.ForeignKey(Service, to_field='service_id', on_delete=models.CASCADE)
-    employee_id = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
-    appointment_date = models.DateTimeField(null=False, auto_now=True)
+    customer = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, to_field='service_id', on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
+    appointment_date = models.DateField(null=False)
     start_time = models.TimeField(null=False)
     end_time = models.TimeField(null=False)
     status = models.IntegerField(null=False)
     note = models.TextField(null=True)
-    is_delete = models.IntegerField(null=False, default=DeletedType.AVAILABLE)
+    is_delete = models.IntegerField(null=False, default=0)
 
 class Feedback(models.Model):
     request_id = models.AutoField(primary_key=True)
-    customer_id = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
-    employee_id = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
-    service_id = models.ForeignKey(Service, to_field='service_id', on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, to_field='service_id', on_delete=models.CASCADE)
     status = models.IntegerField(null=False)
-    priority = models.IntegerField(null=False)
+    prioritize = models.IntegerField(null=False)
     request_content = models.TextField(null=False)
     request_date = models.DateTimeField(null=False, auto_now=True)
-    is_delete = models.IntegerField(null=False, default=DeletedType.AVAILABLE)
+    is_delete = models.IntegerField(null=False, default=0)
 
-class Shifts(models.Model):
+class WorkShifts(models.Model):
     shifts_id = models.AutoField(primary_key=True)
-    employee_id = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
     shifts_date = models.DateField(null=False, auto_now=True)
     shifts_detail = models.TextField(null=False)
-    is_delete = models.IntegerField(null=False, default=DeletedType.AVAILABLE)
+    is_delete = models.IntegerField(null=False, default=0)

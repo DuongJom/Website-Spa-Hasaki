@@ -13,3 +13,14 @@ class AppointmentStatusType(Enum):
 class DeletedType(Enum):
     AVAILABLE = 0
     DELETED = 1
+
+class PriorityType(Enum):
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+
+class FeedbackStatusType(Enum):
+    PENDING = 0
+    PROCESSING = 1
+    PROCESSED = 2
+

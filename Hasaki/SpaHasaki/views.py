@@ -1,12 +1,89 @@
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
-from datetime import datetime as dt, timedelta
-from .models import Customer, Appointment, Service
+from datetime import datetime as dt, timedelta, date
+from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts
 from .helpers import get_appointment, read_data
- 
+
+tables = [
+    'Customers', 
+    'Services', 
+    'Employees', 
+    'Appointments', 
+    'Feedback', 
+    'WorkShifts'
+]
+
 def home(request):
     if request.method == "GET":
+        for table_name in tables:
+            if (table_name == "Customers" and Customer.objects.all().values().count() > 0) or \
+                (table_name == "Services" and Service.objects.all().values().count() > 0) or \
+                (table_name == "Appointments" and Appointment.objects.all().values().count() > 0) or \
+                (table_name == "Employees" and Employee.objects.all().values().count() > 0) or \
+                (table_name == "Feedback" and Feedback.objects.all().values().count() > 0) or \
+                (table_name == "WorkShifts" and WorkShifts.objects.all().values().count() > 0):
+                continue
+
+            lst_data = read_data(table_name)
+            for data in lst_data:
+                if table_name == "Customers":
+                    if not Customer.objects.filter(customer_id=data['customer_id']):
+                        customer = Customer(customer_id=data['customer_id'],
+                                            customer_name=data['customer_name'],
+                                            phone_number=data['phone_number'],
+                                            email=data['email'],
+                                            created_date=data['created_date'],
+                                            is_delete=data['is_delete'])
+                        customer.save()
+                elif table_name == "Services":
+                    if not Service.objects.filter(service_id=data['service_id']):
+                        service = Service(service_id=data['service_id'],
+                                          service_name=data['service_name'],
+                                          description=data['description'])
+                        service.save()
+                elif table_name == "Employees":
+                    if not Employee.objects.filter(employee_id=data['employee_id']):
+                        employee = Employee(employee_id=data['employee_id'],
+                                            employee_name=data['employee_name'],
+                                            email=data['email'],
+                                            phone_number=data['phone_number'],
+                                            password=data['password'],
+                                            created_date=data['created_date'])
+                        employee.save()
+                elif table_name == "Appointments":
+                    if not Appointment.objects.filter(appointment_id=data['appointment_id']):
+                        appointment = Appointment(appointment_id=data['appointment_id'],
+                                                  customer_id=data['customer_id'],
+                                                  service_id=data['service_id'],
+                                                  employee_id=data['employee_id'],
+                                                  appointment_date=dt.strptime(data['appointment_date'], "%d/%m/%Y").date(),
+                                                  start_time=data['start_time'],
+                                                  end_time=data['end_time'],
+                                                  status=data['status'],
+                                                  note=data['note'],
+                                                  is_delete=data['is_delete'])
+                        appointment.save()
+                elif table_name == "Feedback":
+                    if not Feedback.objects.filter(request_id=data['request_id']):
+                        feedback = Feedback(request_id=data['request_id'],
+                                            customer_id=data['customer_id'],
+                                            employee_id=data['employee_id'],
+                                            service_id=data['service_id'],
+                                            status=data['status'],
+                                            prioritize=data['prioritize'],
+                                            request_content=data['request_content'],
+                                            request_date=data['request_date'],
+                                            is_delete=data['is_delete'])
+                        feedback.save()
+                elif table_name == "WorkShifts":
+                    if not WorkShifts.objects.filter(shifts_id=data['shifts_id']):
+                        workShifts = WorkShifts(shifts_id=data['shifts_id'],
+                                                employee_id=data['employee_id'],
+                                                shifts_date=data['shifts_date'],
+                                                shifts_detail=data['shifts_detail'],
+                                                is_delete=data['is_delete'])
+                        workShifts.save()
         return render(request,'../templates/home.html')
     
 @csrf_protect
@@ -67,29 +144,41 @@ def reset_password(request):
     if request.method == 'GET':
         return render(request, '../templates/new_password.html')
     return redirect('/')
-
-def schedule(request):
+    
+def schedules(request):
     if request.method == 'GET':
+        year = request.GET.get('year')
+        month = request.GET.get('month')
+        day = request.GET.get('day')
+
+        # Convert to integers (with defaults for current year, month, and day)
+        year = int(year) if year else dt.today().year
+        month = int(month) if month else dt.today().month
+        day = int(day) if day else dt.today().day
+        appointments = get_appointment(year=year, month=month, day=day)
+        data = dict()
+
+        for key in appointments.keys():
+            data[key] = []
+            for item in appointments[key]:
+                info = {
+                    'appointment':item['appointment_info'],
+                    'customer':Customer.objects.get(customer_id=item['appointment_info']['customer_id']),
+                    'employee':Employee.objects.get(employee_id=item['appointment_info']['employee_id']),
+                    'service':Service.objects.get(service_id=item['appointment_info']['service_id'])
+                }
+                data[key].append(info)
+                
         context = {
-            'isShowModal': False,
-            'data': get_appointment(),
-            'dataModal': None
+            'data': data,
+            'filterDate': date(year,month,day).strftime('%Y-%m-%d')
         }
         return render(request,'../templates/appointments.html', {"context": context})
     
 def customers(request):
     if request.method == 'GET':
-        lst_customers = read_data("Customers")
-        for data in lst_customers:
-            customer = Customer(customer_id=data['customer_id'],
-                                customer_name=data['customer_name'],
-                                phone_number=data['phone_number'],
-                                email=data['email'],
-                                created_date=data['created_date'],
-                                is_delete=data['is_delete'])
-            customer.save()
         customers = Customer.objects.all().values()
-        paginator = Paginator(customers, 10)
+        paginator = Paginator(customers, 12)
         page_number = request.GET.get('page')
         if not page_number:
             page_number = 1
@@ -97,11 +186,31 @@ def customers(request):
         customers_per_page = paginator.get_page(page_number)
         return render(request,'../templates/customers.html', {'customers': customers_per_page})
     
-def show_detail_appointment(request, id):
-    appointment = Appointment.objects.filter(appointment_id=id).values()
-    context = {
-        'isShowModal': True,
-        'data': get_appointment(),
-        'dataModal': appointment
-    }
-    return render(request,'../templates/appointment.html', {'context': context})
+def detail_appointment(request, id):
+    if request.method == "GET":
+        appointment = Appointment.objects.get(appointment_id=id)
+        year = request.GET.get('year')
+        month = request.GET.get('month')
+        day = request.GET.get('day')
+
+        # Convert to integers (with defaults for current year, month, and day)
+        year = int(year) if year else dt.today().year
+        month = int(month) if month else dt.today().month
+        day = int(day) if day else dt.today().day
+
+        if appointment:
+            customer = Customer.objects.get(customer_id=appointment.customer_id)
+            service = Service.objects.get(service_id=appointment.service_id)
+            employee = Employee.objects.get(employee_id=appointment.employee_id)
+
+            context = {
+                'isShowModal': True,
+                'data': get_appointment(year=year, month=month, day=day),
+                'dataModal': {
+                    'appointment_info': appointment,
+                    'customer_info': customer,
+                    'service_info': service,
+                    'employee_info': employee
+                }
+            }
+            return render(request,'../templates/appointments.html', {'context': context})
