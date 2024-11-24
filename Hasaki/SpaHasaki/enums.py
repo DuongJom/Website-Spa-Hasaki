@@ -7,8 +7,8 @@ class GenderType(Enum):
 
 class AppointmentStatusType(Enum):
     CANCEL = 0
-    COMPLETE = 1
-    INCOMPLETE = 2
+    INCOMPLETE = 1
+    COMPLETE = 2
 
 class DeletedType(Enum):
     AVAILABLE = 0

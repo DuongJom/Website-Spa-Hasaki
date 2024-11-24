@@ -1,13 +1,14 @@
 {% extends "layout.html" %}
 {% load static %}
 {% load tz %}
+{% load custom_filters %}
 {% block title %}
     {% block content_title %}{% endblock %}
 {% endblock %}
 
 {% block content %}
 <!-- Sidebar -->
-<div class="flex min-h-screen w-full">
+<div class="flex flex-row min-h-screen w-full">
     <!-- Sidebar -->
     <aside class="w-64 bg-gray-50 border-r border-gray-200">
         <div class="p-6">
@@ -32,13 +33,13 @@
                 </button>
                 <ul id="menuCustomer" class="pl-6 mt-2 space-y-2">
                     <li>
-                        <a href="/schedules?year={% now 'Y' %}&month={% now 'M' %}&day={% now 'd' %}" class="sidebar-menu-item-normal {% if request.path == '/schedules' %} highlight {% endif %}">
+                        <a href="/schedules?year={% now 'Y' %}&month={% now 'm' %}&day={% now 'd' %}" class="sidebar-menu-item-normal {% if request.path == '/schedules' %} highlight {% endif %}">
                             <img src="{% static 'img/schedule.png' %}" class="w-5 h-5 mr-3"/>
                             Tổng quan lịch hẹn
                         </a>
                     </li>
                     <li>
-                        <a href="/customers" class="sidebar-menu-item-normal {% if request.path == '/customers' %} highlight {% endif %}">
+                        <a href="/customers" class="sidebar-menu-item-normal {% if request.path|startswith:'/customers' %} highlight {% endif %}">
                             <img src="{% static 'img/customer.png' %}" class="sidebar-menu-item"/>
                             Danh sách khách hàng
                         </a>

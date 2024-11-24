@@ -13,7 +13,7 @@ def get_appointment(year, month, day):
     end = 21.0
     while start <= end:
          times.append(start)
-         start = start + 0.5
+         start = start + 0.25
 
     data = dict()
     for t in times:

@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
 from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts
 from .helpers import get_appointment, read_data
+from .enums import AppointmentStatusType, DeletedType
 
 tables = [
     'Customers', 
@@ -151,12 +152,12 @@ def schedules(request):
         month = request.GET.get('month')
         day = request.GET.get('day')
 
-        today = dt.today().date().strftime("%Y-%m-%d")
+        today = dt.today()
 
         # Convert to integers (with defaults for current year, month, and day)
-        year = int(year) if year else int(today.split('-')[0])
-        month = int(month) if month else int(today.split('-')[1])
-        day = int(day) if day else int(today.split('-')[2])
+        year = int(year) if year else today.year
+        month = int(month) if month else today.month
+        day = int(day) if day else today.day
         appointments = get_appointment(year=year, month=month, day=day)
         data = dict()
 
@@ -179,7 +180,7 @@ def schedules(request):
     
 def customers(request):
     if request.method == 'GET':
-        customers = Customer.objects.all().values()
+        customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).values()
         paginator = Paginator(customers, 12)
         page_number = request.GET.get('page')
         if not page_number:
@@ -187,32 +188,55 @@ def customers(request):
         
         customers_per_page = paginator.get_page(page_number)
         return render(request,'../templates/customers.html', {'customers': customers_per_page})
-    
-def detail_appointment(request, id):
-    if request.method == "GET":
+
+def cancel_appointment(request, id):
+    if request.method == 'POST':
+        previous_url = request.META.get('HTTP_REFERER')
         appointment = Appointment.objects.get(appointment_id=id)
+
+        if appointment:
+            appointment.status = AppointmentStatusType.CANCEL.value
+            appointment.save()
+            return redirect(previous_url)
+        
+def detail_customer(request, id):
+    if request.method == 'GET':
         year = request.GET.get('year')
         month = request.GET.get('month')
         day = request.GET.get('day')
 
-        # Convert to integers (with defaults for current year, month, and day)
-        year = int(year) if year else dt.today().year
-        month = int(month) if month else dt.today().month
-        day = int(day) if day else dt.today().day
+        today = dt.today()
+        year = int(year) if year else today.year
+        month = int(month) if month else today.month
+        day = int(day) if day else today.day
 
-        if appointment:
-            customer = Customer.objects.get(customer_id=appointment.customer_id)
-            service = Service.objects.get(service_id=appointment.service_id)
-            employee = Employee.objects.get(employee_id=appointment.employee_id)
+        customer = Customer.objects.get(customer_id=id)
+        appointments = Appointment.objects.filter(customer_id=id)\
+            .filter(appointment_date=date(year=year, month=month, day=day)).values()
 
-            context = {
-                'isShowModal': True,
-                'data': get_appointment(year=year, month=month, day=day),
-                'dataModal': {
-                    'appointment_info': appointment,
-                    'customer_info': customer,
-                    'service_info': service,
-                    'employee_info': employee
-                }
-            }
-            return render(request,'../templates/appointments.html', {'context': context})
+        context = {
+            'customer': customer,
+            'appointments': appointments,
+            'filterDate': date(year=year, month=month, day=day).strftime('%Y-%m-%d')
+        }
+        return render(request, '../templates/customer_detail_info.html', {'context':context})
+    
+def delete_customer(request, id):
+    if request.method == 'POST':
+        customer = Customer.objects.get(customer_id=id)
+        if customer:
+            customer.is_delete = DeletedType.DELETED.value
+            customer.save()
+            return redirect('/customers')
+
+@csrf_protect
+def edit_customer(request, id):
+    if request.method == 'POST':
+        customer = Customer.objects.get(customer_id=id)
+        if customer:
+            customer.customer_name = request.POST.get('customer_name')
+            customer.email = request.POST.get('email')
+            customer.phone_number = request.POST.get('phone_number')
+            customer.save()
+            return redirect('/customers/detail/{0}'.format(id))
+        
