@@ -52,3 +52,14 @@ class WorkShifts(models.Model):
     shifts_date = models.DateField(null=False, auto_now=True)
     shifts_detail = models.TextField(null=False)
     is_delete = models.IntegerField(null=False, default=0)
+
+class Messenger(models.Model):
+    messenger_id = models.AutoField(primary_key=True)
+    customer = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
+    message_id = models.IntegerField(null=False)
+    message = models.TextField(null=True)
+    is_sent_from_customer = models.IntegerField(null=False)
+    sent_time = models.DateTimeField(null=False)
+    is_resolved = models.IntegerField(null=False)
+    is_delete = models.IntegerField(null=False, default=0)

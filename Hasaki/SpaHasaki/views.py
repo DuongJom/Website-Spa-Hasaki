@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
-from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts
+from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger
 from .helpers import get_appointment, read_data
 from .enums import AppointmentStatusType, DeletedType
 
@@ -12,7 +13,8 @@ tables = [
     'Employees', 
     'Appointments', 
     'Feedback', 
-    'WorkShifts'
+    'WorkShifts',
+    'Messengers'
 ]
 
 def home(request):
@@ -23,7 +25,8 @@ def home(request):
                 (table_name == "Appointments" and Appointment.objects.all().values().count() > 0) or \
                 (table_name == "Employees" and Employee.objects.all().values().count() > 0) or \
                 (table_name == "Feedback" and Feedback.objects.all().values().count() > 0) or \
-                (table_name == "WorkShifts" and WorkShifts.objects.all().values().count() > 0):
+                (table_name == "WorkShifts" and WorkShifts.objects.all().values().count() > 0) or \
+                (table_name == "Messengers" and Messenger.objects.all().values().count() > 0):
                 continue
 
             lst_data = read_data(table_name)
@@ -85,6 +88,17 @@ def home(request):
                                                 shifts_detail=data['shifts_detail'],
                                                 is_delete=data['is_delete'])
                         workShifts.save()
+                elif table_name == "Messengers":
+                    if not Messenger.objects.filter(messenger_id=data['messenger_id']):
+                        messenger = Messenger(messenger_id=data['messenger_id'],
+                                              customer_id=data['customer_id'],
+                                              employee_id=data['employee_id'],
+                                              message=data['message'],
+                                              is_sent_from_customer=data['is_sent_from_customer'],
+                                              sent_time=data['sent_time'],
+                                              is_resolved=data['is_resolved'],
+                                              is_delete=data['is_delete'])
+                        messenger.save()
         return render(request,'../templates/home.html')
     
 @csrf_protect
@@ -180,7 +194,7 @@ def schedules(request):
     
 def customers(request):
     if request.method == 'GET':
-        customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).values()
+        customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).values().order_by('customer_id')
         paginator = Paginator(customers, 12)
         page_number = request.GET.get('page')
         if not page_number:
@@ -239,4 +253,58 @@ def edit_customer(request, id):
             customer.phone_number = request.POST.get('phone_number')
             customer.save()
             return redirect('/customers/detail/{0}'.format(id))
-        
+
+def messenger(request):
+    if request.method == 'GET':
+        customer_id = request.GET.get('customer_id')
+        customers = Messenger.objects.values('customer_id').distinct()
+        data = []
+
+        for customer in customers:
+            messages = Messenger.objects.filter(customer_id=customer['customer_id']).values('message').order_by('-sent_time')
+            info = {
+                'customer': Customer.objects.get(customer_id=customer['customer_id']),
+                'messages': messages
+            }
+            data.append(info)
+
+        detailData = None
+        if customer_id:
+            for dta in data:
+                if dta['customer'].customer_id == int(customer_id):
+                    detailData = dta
+                    break
+        else:
+            detailData = data[0]
+
+        chatTemplate = render_to_string('../templates/messenger_content.html', {'context': detailData}, request)
+        #print(chatTemplate)
+
+        context = {
+            'data': data,
+            'chatTemplate': chatTemplate
+        }
+
+        return render(request, '../templates/messenger.html', {'context': context})
+
+def chat_content(request, id):
+    if request.method == 'GET':
+        customers = Messenger.objects.values('customer_id').distinct()
+        data = []
+
+        for customer in customers:
+            messages = Messenger.objects.filter(customer_id=customer['customer_id']).values('message').order_by('-sent_time')
+            info = {
+                'customer':Customer.objects.get(customer_id=customer['customer_id']),
+                'messages': messages
+            }
+            data.append(info)
+        detailData = None
+        if id:
+            for dta in data:
+                if dta['customer'].customer_id == id:
+                    detailData = dta
+                    break
+        else:
+            detailData = data[0]
+        return render(request, 'messenger_content.html', {'context': detailData})

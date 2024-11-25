@@ -13,5 +13,7 @@ urlpatterns = [
     path('customers', views.customers, name='customers'),
     path('customers/detail/<int:id>', views.detail_customer, name='detail-customer'),
     path('customers/delete/<int:id>', views.delete_customer, name='delete-customer'),
-    path('customers/edit/<int:id>', views.edit_customer, name='edit-customer')
+    path('customers/edit/<int:id>', views.edit_customer, name='edit-customer'),
+    path('messenger', views.messenger, name='messenger'),
+    path('messenger/<int:id>', views.chat_content, name='chat'),
 ]

@@ -1,0 +1,67 @@
+{% extends "layout_content.html" %}
+{% load static %}
+{% block content_title %} Messenger {% endblock %}
+{% block detail %}
+<div class="flex h-screen w-10/12">
+    <!-- Sidebar -->
+    <div class="w-1/4 bg-white border-r p-4">
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-green-700">Chat cùng Spa</h2>
+            <!-- Add more sidebar options here -->
+        </div>
+        {% for item in context.data %}
+            <div>
+                <ul class="space-y-4">
+                    <li data-customer-id="{{item.customer.customer_id}}" data-index="{{ forloop.counter0 }}" 
+                        class="bg-transparent rounded p-2 flex items-center hover:bg-green-400">
+                        <!-- Button inside the li -->
+                        <button type="submit" onclick="showChat(this)" class="w-auto bg-transparent flex flex-row">
+                            <span class="w-8 h-8 rounded-full bg-transparent mr-2">
+                                <img src="{% static 'img/logo.png' %}" alt="avatar image" class="rounded-full w-8 h-8">
+                            </span>
+                            <div class="flex flex-col">
+                                <h4 class="text-sm font-semibold">{{ item.customer.customer_name }}</h4>
+                                <p class="text-xs text-gray-500">{{ item.messages.0.message }}</p>
+                            </div>
+                            <input type="hidden" name="customer_id" value="{{ item.customer.customer_id }}">
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            {% endfor %}
+    </div>
+    <div class="w-full">{{context.chatTemplate|safe}}</div>
+</div>
+
+<script>
+    function showChat(button) {
+        const listItem = button.closest('li');
+        const listItemIndex = listItem.getAttribute('data-index');
+        const customer_id = listItem.getAttribute('data-customer-id');
+        const allListItems = document.querySelectorAll('li');
+        
+        allListItems.forEach(item => {
+            const index = item.getAttribute('data-index');
+            if( listItemIndex === index) {
+                item.classList.add('bg-blue-100', 'border-2', 'border-green-500');
+            }
+            else{
+                item.classList.remove('bg-blue-100', 'border-2', 'border-green-500');
+            }
+        })
+
+        fetch(`/messenger?customer_id=${customer_id}`)
+            .then((res) => {
+                if(!res.ok){
+                    throw new Error('Network response was not ok');
+                }
+                return res.text();
+            })
+            .then(html =>{
+                console.log(html);
+                document.getElementById('content').innerHTML = html;
+            })
+            .catch((err) => console.log(err))
+    }
+</script>
+{% endblock %}
