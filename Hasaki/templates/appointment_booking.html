@@ -52,7 +52,7 @@
         class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm 
             focus:ring-green-500 focus:border-green-500 sm:text-sm">
         <option value="-1">Chọn dịch vụ</option>
-        {% for service in services %}
+        {% for service in context.services %}
           <option value="{{service.service_id}}">{{service.service_name}}</option>
         {% endfor %}
         <!-- Add more options as needed -->
@@ -69,6 +69,17 @@
       <input type="time" id="start-time" name="start_time"
         class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white 
             rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"/>
+
+      <!-- Service Time -->
+      <label for="service_time" 
+            class="block text-sm font-medium text-gray-700 mt-4">Thời gian sử dụng dịch vụ</label>
+      <select id="service_time" name="service_time"
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white 
+            rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+            <option value="30">30 phút</option>
+            <option value="60">60 phút</option>
+            <option value="90">90 phút</option>
+      </select>
 
       <!-- Submit Button -->
         <div class=" flex md:col-span-2 mt-5 justify-end">

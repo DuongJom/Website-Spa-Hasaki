@@ -1,0 +1,66 @@
+{% extends "layout_content.html" %}
+{% load static %}
+{% block content_title %} Customers {% endblock %}
+
+{% block detail %}
+<div class="flex flex-col w-full p-5">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-green-700">Đăng ký ca làm việc</h1>
+        {% include "header.html" with avatar_path="../static/img/logo.png" %}
+    </div>
+    <!-- Main Content -->
+    <main class="flex flex-row w-full space-x-5 justify-center items-center mx-auto">
+        <form class="space-y-6 w-3/5">
+            <!-- Full Name -->
+            <div>
+                <label for="fullname" class="block text-sm font-bold text-gray-700">
+                    Họ và tên
+                    <span class="text-red-500">*</span>
+                </label>
+                <input id="fullname" type="text" placeholder="Nguyễn Văn A"
+                    class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+            </div>
+    
+            <!-- Phone Number -->
+            <div>
+                <label for="phone" class="block text-sm font-bold text-gray-700">
+                    Số điện thoại
+                    <span class="text-red-500">*</span>
+                </label>
+                <input id="phone" type="text" placeholder="0905000000" 
+                    class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+            </div>
+    
+            <!-- Registration Date -->
+            <div>
+                <label for="reg-date" class="block text-sm font-bold text-gray-700">
+                    Ngày đăng ký ca
+                    <span class="text-red-500">*</span>
+                </label>
+                <input id="reg-date" type="date" class="w-full mt-2 p-3 border border-gray-300 
+                            rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+            </div>
+    
+            <!-- Shift Type -->
+            <div>
+                <label for="shift-type" class="block text-sm font-bold text-gray-700">
+                    Ca đăng ký
+                    <span class="text-red-500">*</span>
+                </label>
+                <select id="shift-type" class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 
+                    focus:ring-green-600 focus:outline-none">
+                    <option value="-1">Chọn ca làm việc</option>
+                    <option value="0">Sáng (9:00 -13:00)</option>
+                    <option value="1">Chiều (13:00 -17:00)</option>
+                    <option value="2">Tối (17:00 -20:00)</option>
+                </select>
+            </div>
+    
+            <!-- Submit Button -->
+            <div class="flex flex-row justify-end">
+                <button type="submit" class="w-32 bg-green-600 text-white p-3 rounded-md hover:bg-green-700">Hoàn thành</button>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}

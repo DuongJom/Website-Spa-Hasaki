@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
@@ -7,31 +9,31 @@ from .models import Customer, Appointment, Service, Employee, Feedback, WorkShif
 from .helpers import get_appointment, read_data
 from .enums import AppointmentStatusType, DeletedType
 
-tables = [
-    'Customers', 
-    'Services', 
-    'Employees', 
-    'Appointments', 
-    'Feedback', 
-    'WorkShifts',
-    'Messengers'
-]
+tables = {
+    'CUSTOMER': 'Customers', 
+    'SERVICE': 'Services', 
+    'EMPLOYEE': 'Employees', 
+    'APPOINTMENT': 'Appointments', 
+    'FEEDBACK': 'Feedback', 
+    'WORK_SHIFT': 'WorkShifts',
+    'MESSENGER': 'Messengers'
+}
 
 def home(request):
     if request.method == "GET":
-        for table_name in tables:
-            if (table_name == "Customers" and Customer.objects.all().values().count() > 0) or \
-                (table_name == "Services" and Service.objects.all().values().count() > 0) or \
-                (table_name == "Appointments" and Appointment.objects.all().values().count() > 0) or \
-                (table_name == "Employees" and Employee.objects.all().values().count() > 0) or \
-                (table_name == "Feedback" and Feedback.objects.all().values().count() > 0) or \
-                (table_name == "WorkShifts" and WorkShifts.objects.all().values().count() > 0) or \
-                (table_name == "Messengers" and Messenger.objects.all().values().count() > 0):
+        for key, value in tables.items():
+            if (value == tables['CUSTOMER'] and Customer.objects.all().values().count() > 0) or \
+                (value == tables['SERVICE'] and Service.objects.all().values().count() > 0) or \
+                (value == tables['APPOINTMENT'] and Appointment.objects.all().values().count() > 0) or \
+                (value == tables['EMPLOYEE'] and Employee.objects.all().values().count() > 0) or \
+                (value == tables['FEEDBACK'] and Feedback.objects.all().values().count() > 0) or \
+                (value == tables['WORK_SHIFT'] and WorkShifts.objects.all().values().count() > 0) or \
+                (value == tables['MESSENGER'] and Messenger.objects.all().values().count() > 0):
                 continue
 
-            lst_data = read_data(table_name)
+            lst_data = read_data(value)
             for data in lst_data:
-                if table_name == "Customers":
+                if value == tables['CUSTOMER']:
                     if not Customer.objects.filter(customer_id=data['customer_id']):
                         customer = Customer(customer_id=data['customer_id'],
                                             customer_name=data['customer_name'],
@@ -40,13 +42,13 @@ def home(request):
                                             created_date=data['created_date'],
                                             is_delete=data['is_delete'])
                         customer.save()
-                elif table_name == "Services":
+                elif value == tables['SERVICE']:
                     if not Service.objects.filter(service_id=data['service_id']):
                         service = Service(service_id=data['service_id'],
                                           service_name=data['service_name'],
                                           description=data['description'])
                         service.save()
-                elif table_name == "Employees":
+                elif value == tables['EMPLOYEE']:
                     if not Employee.objects.filter(employee_id=data['employee_id']):
                         employee = Employee(employee_id=data['employee_id'],
                                             employee_name=data['employee_name'],
@@ -55,7 +57,7 @@ def home(request):
                                             password=data['password'],
                                             created_date=data['created_date'])
                         employee.save()
-                elif table_name == "Appointments":
+                elif value == tables['APPOINTMENT']:
                     if not Appointment.objects.filter(appointment_id=data['appointment_id']):
                         appointment = Appointment(appointment_id=data['appointment_id'],
                                                   customer_id=data['customer_id'],
@@ -68,7 +70,7 @@ def home(request):
                                                   note=data['note'],
                                                   is_delete=data['is_delete'])
                         appointment.save()
-                elif table_name == "Feedback":
+                elif value == tables['FEEDBACK']:
                     if not Feedback.objects.filter(request_id=data['request_id']):
                         feedback = Feedback(request_id=data['request_id'],
                                             customer_id=data['customer_id'],
@@ -80,7 +82,7 @@ def home(request):
                                             request_date=data['request_date'],
                                             is_delete=data['is_delete'])
                         feedback.save()
-                elif table_name == "WorkShifts":
+                elif value == tables['WORK_SHIFT']:
                     if not WorkShifts.objects.filter(shifts_id=data['shifts_id']):
                         workShifts = WorkShifts(shifts_id=data['shifts_id'],
                                                 employee_id=data['employee_id'],
@@ -88,7 +90,7 @@ def home(request):
                                                 shifts_detail=data['shifts_detail'],
                                                 is_delete=data['is_delete'])
                         workShifts.save()
-                elif table_name == "Messengers":
+                elif value == tables['MESSENGER']:
                     if not Messenger.objects.filter(messenger_id=data['messenger_id']):
                         messenger = Messenger(messenger_id=data['messenger_id'],
                                               customer_id=data['customer_id'],
@@ -100,6 +102,29 @@ def home(request):
                                               is_delete=data['is_delete'])
                         messenger.save()
         return render(request,'../templates/home.html')
+    
+@csrf_protect
+def login(request):
+    if request.method == 'GET':
+        return render(request, '../templates/login.html')
+    
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+
+    if not username or not password:
+        messages.error(request, 'Vui lòng kiểm tra lại tài khoản đăng nhập!')
+        return redirect(request.path)
+    
+    employees = Employee.objects.filter(Q(email=username) | Q(phone_number=username)).values()
+
+    for employee in employees:
+        if employee['password'] == password:
+            request.session['employee_id'] = employee['employee_id']
+            messages.success(request, "Đăng nhập thành công!")
+            return redirect("/schedules")
+        
+    messages.error(request, 'Tài khoản không tồn tại!')
+    return redirect(request.path)
     
 @csrf_protect
 def appointment_booking(request):
@@ -119,13 +144,39 @@ def appointment_booking(request):
     service = request.POST.get('service')
     appointment_date = request.POST.get('appointment_date')
     start_time = request.POST.get('start_time')
-    end_time = dt.combine(dt.today(), dt.strptime(start_time, '%H:%M').time()) + timedelta(hours=1)
+    service_time = request.POST.get('service_time')
+    end_time = None
 
-    if not customer_name or not phone or not email or not service or \
+    if not customer_name or not phone or not email or int(service) <= 0 or \
         not appointment_date or not start_time:
+        messages.error(request,'Vui lòng điền đủ thông tin!')
         return render(request, '../templates/appointment_booking.html', {'isSuccess': False})
     
-    service_obj = Service.objects.filter(service_id=service).values()
+    customer = Customer.objects.filter(phone_number=phone).first()
+    new_customer = None
+    if not customer:
+        new_customer = Customer(
+            customer_name = customer_name,
+            phone_number = phone,
+            email = email
+        )
+        new_customer.save()
+
+    service_obj = Service.objects.filter(service_id=service).first()
+    hours = int(service_time) * 60 if service_time else 0.5
+    end_time = (dt.strptime(str(start_time), "%H:%M") + timedelta(hours=hours)).time()
+    
+    appointment = Appointment(
+        customer = customer if customer else new_customer,
+        service = service_obj,
+        employee=None,
+        appointment_date = appointment_date,
+        start_time = dt.strptime(str(start_time), "%H:%M").time(),
+        end_time = end_time,
+        status = AppointmentStatusType.INCOMPLETE.value,
+        note = note
+    )
+    appointment.save()
 
     context = {
         'isSuccess': True,
@@ -148,11 +199,9 @@ def phone_verify(request):
         return redirect('/reset-password')
     return render(request, '../templates/phone_verification.html')
 
-@csrf_protect
-def login(request):
-    if request.method == 'GET':
-        return render(request, '../templates/login.html')
-    return redirect("/schedules")
+def logout(request):
+    request.session.pop('employee_id', None)
+    return redirect('/')
 
 @csrf_protect
 def reset_password(request):
@@ -308,3 +357,63 @@ def chat_content(request, id):
         else:
             detailData = data[0]
         return render(request, 'messenger_content.html', {'context': detailData})
+
+@csrf_protect
+def support(request):
+    services = Service.objects.all().values()
+
+    if request.method == 'GET':
+        context = {
+            'isShowModal': False,
+            'services': services
+        }
+        return render(request, '../templates/request.html', {'context': context})
+    
+    customer_name = request.POST.get('customer_name')
+    phone_number = request.POST.get('phone_number')
+    email = request.POST.get('email')
+    service = request.POST.get('service')
+    content = request.POST.get('request_content')
+    employee_id = int(request.session.get('employee_id'))
+    
+    try:
+        customer = Customer.objects.get(phone_number=phone_number)
+        new_customer = None
+        if not customer:
+            new_customer = Customer(
+                customer_name = customer_name,
+                phone_number = phone_number,
+                email = email
+            )
+            new_customer.save()
+
+        feedback = Feedback(
+            customer=customer if customer else new_customer,
+            employee=Employee.objects.get(employee_id=employee_id),
+            service=Service.objects.get(service_id=service),
+            request_content=content
+        )
+        feedback.save()
+
+        context = {
+            'customer': customer_name,
+            'phone': phone_number,
+            'service': Service.objects.get(service_id=service),
+            'content': content,
+            'isShowModal': True,
+            'services': services
+        }
+    except Exception as e:
+        context = {
+            'customer': customer_name,
+            'phone': phone_number,
+            'service': Service.objects.get(service_id=service),
+            'content': content,
+            'isShowModal': False,
+            'services': services
+        }
+    return render(request,'../templates/request.html', {'context': context})
+
+def register_work_shifts(request):
+    if request.method == 'GET':
+        return render(request, '../templates/work_shifts.html')

@@ -13,16 +13,16 @@
         </div>
         <div class="flex space-x-6">
             <a href="/booking" class="hover:text-gray-300 {% if request.path == '/booking' %} underline text-white font-semibold {% endif %}">Đặt hẹn</a>
-            <a href="#" class="hover:text-gray-300">Yêu cầu hỗ trợ</a>
+            <a href="/support" class="hover:text-gray-300">Yêu cầu hỗ trợ</a>
         </div>
         <div class="text-gray-500 flex flex-row">
-            <a href="/login" class="w-auto h-auto bg-transparent">
+            <a href="/login" class="w-auto h-auto bg-transparent flex flex-row">
                 <img src="{% static 'img/user.png' %}" class="w-10 h-10 ml-3 rounded-full"/>
+                <div class="flex flex-col text-black">
+                    <p class="font-semibold text-black text-center grid-rows-1 grid-cols-2">Đăng nhập</p>
+                    <p class="text-sm italic">Tài khoản nhân viên</p>
+                </div>
             </a>
-            <div class="flex flex-col text-black">
-                <p class="font-semibold text-black text-center grid-rows-1 grid-cols-2">Đăng nhập</p>
-                <p class="text-sm italic">Tài khoản nhân viên</p>
-            </div>
         </div>
     </nav>
 

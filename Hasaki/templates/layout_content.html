@@ -72,7 +72,7 @@
                 </button>
                 <ul id="menuEmployee" class="pl-6 mt-2 space-y-2">
                     <li>
-                        <a href="/register-shifts" class="sidebar-menu-item-normal {% if request.path == '/reports' %} highlight {% endif %}">
+                        <a href="/register-work-shifts" class="sidebar-menu-item-normal {% if request.path == '/reports' %} highlight {% endif %}">
                             <img src="{% static 'img/shift.png' %}" class="sidebar-menu-item"/>
                             Đăng ký ca làm việc
                         </a>
@@ -81,6 +81,12 @@
                         <a href="/appointments" class="sidebar-menu-item-normal {% if request.path == '/appointments' %} highlight {% endif %}">
                             <img src="{% static 'img/personal.png' %}" class="sidebar-menu-item"/>
                             Lịch làm việc cá nhân
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/logout" class="sidebar-menu-item-normal {% if request.path == '/logout' %} highlight {% endif %}">
+                            <img src="{% static 'img/logout.png' %}" class="sidebar-menu-item"/>
+                            Đăng xuất
                         </a>
                     </li>
                 </ul>
