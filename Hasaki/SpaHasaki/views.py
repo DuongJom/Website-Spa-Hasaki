@@ -128,8 +128,8 @@ def login(request):
     
 @csrf_protect
 def appointment_booking(request):
+    services = Service.objects.all()
     if request.method == "GET":
-        services = Service.objects.all()
         context = {
             'isSuccess': False,
             'services': services
@@ -147,10 +147,32 @@ def appointment_booking(request):
     service_time = request.POST.get('service_time')
     end_time = None
 
-    if not customer_name or not phone or not email or int(service) <= 0 or \
-        not appointment_date or not start_time:
+    if (customer_name == '') or (phone == '') or (email == '') or (int(service) == -1) or \
+        (appointment_date == '') or (start_time == ''):
         messages.error(request,'Vui lòng điền đủ thông tin!')
-        return render(request, '../templates/appointment_booking.html', {'isSuccess': False})
+        context = {
+            'isSuccess': False,
+            'services': services
+        }
+        return render(request, '../templates/appointment_booking.html', {'context': context})
+    
+    booking_time = dt.strptime(start_time, '%H:%M').time()
+    range_time = None
+    if booking_time.hour >= 9 and booking_time.hour < 13:
+        range_time = "Sáng (9h - 13h00)"
+    elif booking_time.hour >= 13 and booking_time.hour < 17:
+        range_time = "Chiều (13h00 - 17h00)"
+    else:
+        range_time = "Tối (17h00 - 20h00)"
+
+    available_employees = WorkShifts.objects.filter(shifts_date=appointment_date).filter(shifts_detail__contains=range_time).values()
+    if available_employees.count() == 0:
+        messages.error(request, "Hiện tại không có nhân viên cho khung giờ này! Vui lòng chọn khung giờ khác!")
+        return redirect(request.path)
+    
+    if available_employees.count() == 5:
+        messages.error(request, "Hiện tại đã full nhân viên cho khung giờ này! Vui lòng chọn khung giờ khác!")
+        return redirect(request.path)
     
     customer = Customer.objects.filter(phone_number=phone).first()
     new_customer = None
@@ -163,13 +185,16 @@ def appointment_booking(request):
         new_customer.save()
 
     service_obj = Service.objects.filter(service_id=service).first()
-    hours = int(service_time) * 60 if service_time else 0.5
-    end_time = (dt.strptime(str(start_time), "%H:%M") + timedelta(hours=hours)).time()
-    
+    minutes = (float(service_time) * 60) if service_time else 30
+    end_time = (dt.strptime(str(start_time), "%H:%M") + timedelta(minutes=minutes)).time()
+    print(end_time)
+    employee_id = available_employees.first()['employee_id']
+    employee = Employee.objects.get(employee_id=employee_id)
+
     appointment = Appointment(
         customer = customer if customer else new_customer,
         service = service_obj,
-        employee=None,
+        employee = employee,
         appointment_date = appointment_date,
         start_time = dt.strptime(str(start_time), "%H:%M").time(),
         end_time = end_time,
@@ -183,13 +208,13 @@ def appointment_booking(request):
         'customer_name': customer_name,
         'phone': phone,
         'email': email,
-        'service': service_obj[0]['service_name'] if service_obj else "Không dịch vụ",
+        'service': service_obj.service_name if service_obj else "Không dịch vụ",
         'appointment_date': appointment_date,
         'note': note,
         'start_time': start_time,
-        'end_time': f"{str(end_time.time().hour).zfill(2)}:{str(end_time.time().minute).zfill(2)}",
+        'end_time': f"{str(end_time.hour).zfill(2)}:{str(end_time.minute).zfill(2)}",
         'start_clock_type': "AM" if int(str(start_time).split(":")[0]) < 12 else "PM",
-        'end_clock_type': "AM" if end_time.time().hour < 12 else "PM"
+        'end_clock_type': "AM" if end_time.hour < 12 else "PM"
     }
     return render(request, '../templates/appointment_booking.html', {'context': context})
 
@@ -336,28 +361,6 @@ def messenger(request):
 
         return render(request, '../templates/messenger.html', {'context': context})
 
-def chat_content(request, id):
-    if request.method == 'GET':
-        customers = Messenger.objects.values('customer_id').distinct()
-        data = []
-
-        for customer in customers:
-            messages = Messenger.objects.filter(customer_id=customer['customer_id']).values('message').order_by('-sent_time')
-            info = {
-                'customer':Customer.objects.get(customer_id=customer['customer_id']),
-                'messages': messages
-            }
-            data.append(info)
-        detailData = None
-        if id:
-            for dta in data:
-                if dta['customer'].customer_id == id:
-                    detailData = dta
-                    break
-        else:
-            detailData = data[0]
-        return render(request, 'messenger_content.html', {'context': detailData})
-
 @csrf_protect
 def support(request):
     services = Service.objects.all().values()
@@ -414,6 +417,56 @@ def support(request):
         }
     return render(request,'../templates/request.html', {'context': context})
 
+@csrf_protect
 def register_work_shifts(request):
+
+    employee_id = request.session.get('employee_id')
+    if not employee_id:
+            return redirect("/login")
+        
+    employee = Employee.objects.get(employee_id=employee_id)
+
     if request.method == 'GET':
-        return render(request, '../templates/work_shifts.html')
+
+        context = {
+            'isSuccess': False,
+            'employee': employee,
+            'default_date': dt.today().strftime('%Y-%m-%d')
+        }
+        return render(request, '../templates/work_shifts.html', {'context': context})
+    
+    shifts_date = request.POST.get('shifts_date')
+    shifts_detail = request.POST.get('shifts_detail')
+    if int(shifts_detail) < 0:
+        messages.error(request, 'Vui lòng chọn ca làm việc!')
+        return redirect(request.META.get('HTTP_REFERER'))
+    
+    detail = None
+    if int(shifts_detail) == 0:
+        detail = "Sáng (9h - 13h00)"
+    elif int(shifts_detail) == 1:
+        detail = "Chiều (13h00 - 17h00)"
+    else:
+        detail = "Tối (17h00 - 20h00)"
+
+    work_shifts = WorkShifts(
+        employee = employee,
+        shifts_date = shifts_date,
+        shifts_detail = detail
+    )
+    work_shifts.save()
+
+    context = {
+        'isSuccess': True,
+        'employee': employee,
+        'default_date': dt.today().strftime('%Y-%m-%d'),
+        'info':{
+            'employee_name': employee.employee_name,
+            'phone_number': employee.phone_number,
+            'shifts_date': shifts_date,
+            'shifts_detail': detail
+        }
+    }
+    return render(request, '../templates/work_shifts.html', {'context': context})
+    
+

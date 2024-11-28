@@ -1,5 +1,6 @@
 {% extends "layout_content.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block content_title %} Customers {% endblock %}
 
 {% block detail %}
@@ -10,25 +11,24 @@
     </div>
     <!-- Main Content -->
     <main class="flex flex-row w-full space-x-5 justify-center items-center mx-auto">
-        <form class="space-y-6 w-3/5">
-            <!-- Full Name -->
+        <form class="space-y-6 w-3/5" method="post" action="/register-work-shifts">
+            {% csrf_token %}
+            <!-- Full Name --> 
             <div>
-                <label for="fullname" class="block text-sm font-bold text-gray-700">
-                    Họ và tên
-                    <span class="text-red-500">*</span>
-                </label>
-                <input id="fullname" type="text" placeholder="Nguyễn Văn A"
+                <label for="fullname" class="block text-sm font-bold text-gray-700">Họ và tên</label>
+                <div id="fullname"
                     class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+                    {{context.employee.employee_name}}
+                </div>
             </div>
     
             <!-- Phone Number -->
             <div>
-                <label for="phone" class="block text-sm font-bold text-gray-700">
-                    Số điện thoại
-                    <span class="text-red-500">*</span>
-                </label>
-                <input id="phone" type="text" placeholder="0905000000" 
+                <label for="phone" class="block text-sm font-bold text-gray-700">Số điện thoại</label>
+                <div id="phone"
                     class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+                    {{context.employee.phone_number|phoneformat:"10"}}
+                </div>
             </div>
     
             <!-- Registration Date -->
@@ -37,8 +37,8 @@
                     Ngày đăng ký ca
                     <span class="text-red-500">*</span>
                 </label>
-                <input id="reg-date" type="date" class="w-full mt-2 p-3 border border-gray-300 
-                            rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
+                <input id="reg-date" type="date" value="{{context.default_date}}" name="shifts_date"
+                    class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-600 focus:outline-none">
             </div>
     
             <!-- Shift Type -->
@@ -48,7 +48,7 @@
                     <span class="text-red-500">*</span>
                 </label>
                 <select id="shift-type" class="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 
-                    focus:ring-green-600 focus:outline-none">
+                    focus:ring-green-600 focus:outline-none" name="shifts_detail">
                     <option value="-1">Chọn ca làm việc</option>
                     <option value="0">Sáng (9:00 -13:00)</option>
                     <option value="1">Chiều (13:00 -17:00)</option>
@@ -63,4 +63,50 @@
         </form>
     </main>
 </div>
+{% if context.isSuccess %}
+<!-- Modal -->
+<div id="myModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg w-1/2">
+        <!-- Modal content -->
+        <div class="relative p-6">
+            <!-- Close button -->
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" id="closeModalBtn">&times;</button>
+
+            <h2 class="text-xl font-bold text-green-600 mb-4">Bạn đã đăng ký ca làm việc thành công!</h2>
+            <h3 class="text-lg font-semibold mb-3">Thông tin đăng ký</h3>
+            <div class="space-y-2">
+                <p><strong>Họ và tên:</strong> {{context.info.employee_name}}</p>
+                <p><strong>Số điện thoại:</strong> {{context.info.phone_number}}</p>
+                <p><strong>Ngày đăng ký:</strong> {{context.info.shifts_date|date:'Y-m-d'}}</p>
+                <p><strong>Ca đăng ký:</strong>{{context.info.shifts_detail}}</p>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button id="closeFooterBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Get modal element
+    const modal = document.getElementById("myModal");
+    // Get close button
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const closeFooterBtn = document.getElementById("closeFooterBtn");
+    // Close modal when 'x' or 'Complete' button is clicked
+    closeModalBtn.onclick = function() {
+        modal.classList.add('hidden');
+    }
+
+    closeFooterBtn.onclick = function() {
+        modal.classList.add('hidden');
+    }
+    // Close modal if clicked outside modal content
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.classList.add('hidden');
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}
