@@ -1,3 +1,4 @@
+import calendar
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -187,7 +188,6 @@ def appointment_booking(request):
     service_obj = Service.objects.filter(service_id=service).first()
     minutes = (float(service_time) * 60) if service_time else 30
     end_time = (dt.strptime(str(start_time), "%H:%M") + timedelta(minutes=minutes)).time()
-    print(end_time)
     employee_id = available_employees.first()['employee_id']
     employee = Employee.objects.get(employee_id=employee_id)
 
@@ -219,6 +219,198 @@ def appointment_booking(request):
     return render(request, '../templates/appointment_booking.html', {'context': context})
 
 @csrf_protect
+def support(request):
+    services = Service.objects.all().values()
+
+    if request.method == 'GET':
+        context = {
+            'isShowModal': False,
+            'services': services
+        }
+        return render(request, '../templates/request.html', {'context': context})
+    
+    customer_name = request.POST.get('customer_name')
+    phone_number = request.POST.get('phone_number')
+    email = request.POST.get('email')
+    service = request.POST.get('service')
+    content = request.POST.get('request_content')
+
+    try:
+        customer = Customer.objects.get(phone_number=phone_number)
+        new_customer = None
+        if not customer:
+            new_customer = Customer(
+                customer_name = customer_name,
+                phone_number = phone_number,
+                email = email
+            )
+            new_customer.save()
+
+        feedback = Feedback(
+            customer=customer if customer else new_customer,
+            service=Service.objects.get(service_id=service),
+            request_content=content
+        )
+        feedback.save()
+
+        context = {
+            'customer': customer_name,
+            'phone': phone_number,
+            'service': Service.objects.get(service_id=service),
+            'content': content,
+            'request_date': feedback.request_date,
+            'isShowModal': True,
+            'services': services
+        }
+    except Exception as e:
+        context = {
+            'customer': customer_name,
+            'phone': phone_number,
+            'service': Service.objects.get(service_id=service),
+            'content': content,
+            'isShowModal': False,
+            'services': services
+        }
+    return render(request,'../templates/request.html', {'context': context})
+
+@csrf_protect
+def register_work_shifts(request):
+    employee_id = request.session.get('employee_id')
+    employee = Employee.objects.get(employee_id=employee_id)
+
+    if request.method == 'GET':
+        if not employee_id:
+            return redirect('/login')
+        context = {
+            'isSuccess': False,
+            'employee': employee,
+            'default_date': dt.today().strftime('%Y-%m-%d')
+        }
+        return render(request, '../templates/register_work_shifts.html', {'context': context})
+    
+    shifts_date = request.POST.get('shifts_date')
+    shifts_detail = request.POST.get('shifts_detail')
+
+    if dt.strptime(shifts_date, '%Y-%m-%d').date() < dt.today().date():
+        messages.error(request, 'Ngày đăng ký không hợp lệ!')
+        context = {
+            'isSuccess': False,
+            'employee': employee,
+            'default_date': dt.strptime(shifts_date, '%Y-%m-%d').strftime('%Y-%m-%d')
+        }
+        return render(request, '../templates/register_work_shifts.html', {'context': context})
+
+    if int(shifts_detail) < 0:
+        messages.error(request, 'Vui lòng chọn ca làm việc!')
+        return redirect(request.META.get('HTTP_REFERER'))
+    
+    detail = None
+    if int(shifts_detail) == 0:
+        detail = "Sáng (9h - 13h00)"
+    elif int(shifts_detail) == 1:
+        detail = "Chiều (13h00 - 17h00)"
+    else:
+        detail = "Tối (17h00 - 20h00)"
+
+    work_shift = WorkShifts.objects.filter(
+        employee_id=employee_id, 
+        shifts_date=dt.strptime(shifts_date,'%Y-%m-%d').date()
+    ).values().first()
+
+    if work_shift:
+        details = [detail for detail in work_shift['shifts_detail'].split(';')]
+        if detail in details:
+            messages.error(request, 'Vui lòng chọn ca làm khác!')
+            return redirect(request.path)
+        
+        WorkShifts.objects.filter(
+            employee_id=employee_id, 
+            shifts_date=dt.strptime(shifts_date,'%Y-%m-%d').date()
+        ).update(shifts_detail = work_shift['shifts_detail'] + ';' + detail)
+    else:
+        work_shift = WorkShifts(
+            employee = employee,
+            shifts_date = dt.strptime(shifts_date, '%Y-%m-%d').date(),
+            shifts_detail = detail
+        )
+        work_shift.save()
+
+    context = {
+        'isSuccess': True,
+        'employee': employee,
+        'default_date': dt.today().strftime('%Y-%m-%d'),
+        'info':{
+            'employee_name': employee.employee_name,
+            'phone_number': employee.phone_number,
+            'shifts_date': dt.strptime(shifts_date, '%Y-%m-%d').date(),
+            'shifts_detail': detail
+        }
+    }
+    return render(request, '../templates/register_work_shifts.html', {'context': context})
+
+def work_shifts(request):
+    if request.method == 'GET':
+        if not request.session.get('employee_id'):
+            return redirect('/login')
+        
+        month = int(request.GET.get('month')) if request.GET.get('month') else dt.today().month
+        year = int(request.GET.get('year')) if request.GET.get('year') else dt.today().year
+        week = int(request.GET.get('week')) if request.GET.get('week') else 1
+        employee_id = request.session.get('employee_id')
+
+        if not employee_id:
+            messages.error(request, 'Vui lòng đăng nhập để xem thông tin!')
+            return redirect(request.path)
+        
+        if not month or not year:
+            month = dt.today().month
+            year = dt.today().year
+
+        cal = calendar.monthcalendar(year, month)
+        week_days = cal[week - 1]
+        dates_of_week = []
+        for i, day in enumerate(week_days):
+            if day != 0:
+                dates_of_week.append(date(year, month, day))
+
+        morning = "Sáng (9h - 13h00)"
+        afternoon = "Chiều (13h00 - 17h00)"
+        evening = "Tối (17h00 - 20h00)" 
+        data = []
+        for day in dates_of_week:
+            work_shift = WorkShifts.objects.filter(
+                employee_id=employee_id, 
+                shifts_date=day
+            ).first()
+            info = dict()
+            if work_shift:
+                details = [detail for detail in work_shift.shifts_detail.split(';')]
+                info = {
+                    'day': day,
+                    'is_morning': True if morning in details else False,
+                    'is_afternoon': True if afternoon in details else False,
+                    'is_evening': True if evening in details else False
+                }
+            else:
+                info = {
+                    'day': day,
+                    'is_morning':  False,
+                    'is_afternoon': False,
+                    'is_evening': False
+                }
+            data.append(info)
+
+        context = {
+            'current_date': dt.today().strftime('%Y-%m'),
+            'week_days': dates_of_week,
+            'week_number': week,
+            'weeks': [i for i in range(1, len(cal) + 1)],
+            'data': data,
+            'employee': Employee.objects.get(employee_id=employee_id)
+        }
+        return render(request, '../templates/personal_work_shifts.html', {'context': context})
+
+@csrf_protect
 def phone_verify(request):
     if request.method == 'POST':
         return redirect('/reset-password')
@@ -233,9 +425,12 @@ def reset_password(request):
     if request.method == 'GET':
         return render(request, '../templates/new_password.html')
     return redirect('/')
-    
+
 def schedules(request):
     if request.method == 'GET':
+        if not request.session.get('employee_id'):
+            return redirect('/login')
+        
         year = request.GET.get('year')
         month = request.GET.get('month')
         day = request.GET.get('day')
@@ -247,6 +442,12 @@ def schedules(request):
         month = int(month) if month else today.month
         day = int(day) if day else today.day
         appointments = get_appointment(year=year, month=month, day=day)
+
+        employee_id = request.session.get('employee_id')
+        employee = None
+        if employee_id:
+            employee = Employee.objects.get(employee_id=int(employee_id))
+
         data = dict()
 
         for key in appointments.keys():
@@ -262,20 +463,33 @@ def schedules(request):
 
         context = {
             'data': data,
-            'filterDate': date(year,month,day).strftime('%Y-%m-%d')
+            'filterDate': date(year,month,day).strftime('%Y-%m-%d'),
+            'employee': employee
         }
         return render(request,'../templates/appointments.html', {"context": context})
-    
+
 def customers(request):
     if request.method == 'GET':
+        if not request.session.get('employee_id'):
+            return redirect('/login')
+    
         customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).values().order_by('customer_id')
         paginator = Paginator(customers, 12)
         page_number = request.GET.get('page')
         if not page_number:
             page_number = 1
         
+        employee_id = request.session.get('employee_id')
+        employee = None
+        if employee_id:
+            employee = Employee.objects.get(employee_id=int(employee_id))
+
         customers_per_page = paginator.get_page(page_number)
-        return render(request,'../templates/customers.html', {'customers': customers_per_page})
+        context = {
+            'customers': customers_per_page,
+            'employee': employee
+        }
+        return render(request,'../templates/customers.html', {'context': context})
 
 def cancel_appointment(request, id):
     if request.method == 'POST':
@@ -286,9 +500,12 @@ def cancel_appointment(request, id):
             appointment.status = AppointmentStatusType.CANCEL.value
             appointment.save()
             return redirect(previous_url)
-        
+
 def detail_customer(request, id):
     if request.method == 'GET':
+        if not request.session.get('employee_id'):
+            return redirect('/login')
+        
         year = request.GET.get('year')
         month = request.GET.get('month')
         day = request.GET.get('day')
@@ -302,10 +519,16 @@ def detail_customer(request, id):
         appointments = Appointment.objects.filter(customer_id=id)\
             .filter(appointment_date=date(year=year, month=month, day=day)).values()
 
+        employee_id = request.session.get('employee_id')
+        employee = None
+        if employee_id:
+            employee = Employee.objects.get(employee_id=int(employee_id))
+
         context = {
             'customer': customer,
             'appointments': appointments,
-            'filterDate': date(year=year, month=month, day=day).strftime('%Y-%m-%d')
+            'filterDate': date(year=year, month=month, day=day).strftime('%Y-%m-%d'),
+            'employee': employee
         }
         return render(request, '../templates/customer_detail_info.html', {'context':context})
     
@@ -313,9 +536,13 @@ def delete_customer(request, id):
     if request.method == 'POST':
         customer = Customer.objects.get(customer_id=id)
         if customer:
+            appointments = Appointment.objects.filter(customer_id=customer.customer_id)
+            if appointments:
+                appointments.update(is_delete=DeletedType.DELETED.value)
+
             customer.is_delete = DeletedType.DELETED.value
             customer.save()
-            return redirect('/customers')
+            return redirect("/customers")
 
 @csrf_protect
 def edit_customer(request, id):
@@ -330,6 +557,9 @@ def edit_customer(request, id):
 
 def messenger(request):
     if request.method == 'GET':
+        if not request.session.get('employee_id'):
+            return redirect('/login')
+        
         customer_id = request.GET.get('customer_id')
         customers = Messenger.objects.values('customer_id').distinct()
         data = []
@@ -360,113 +590,3 @@ def messenger(request):
         }
 
         return render(request, '../templates/messenger.html', {'context': context})
-
-@csrf_protect
-def support(request):
-    services = Service.objects.all().values()
-
-    if request.method == 'GET':
-        context = {
-            'isShowModal': False,
-            'services': services
-        }
-        return render(request, '../templates/request.html', {'context': context})
-    
-    customer_name = request.POST.get('customer_name')
-    phone_number = request.POST.get('phone_number')
-    email = request.POST.get('email')
-    service = request.POST.get('service')
-    content = request.POST.get('request_content')
-    employee_id = int(request.session.get('employee_id'))
-    
-    try:
-        customer = Customer.objects.get(phone_number=phone_number)
-        new_customer = None
-        if not customer:
-            new_customer = Customer(
-                customer_name = customer_name,
-                phone_number = phone_number,
-                email = email
-            )
-            new_customer.save()
-
-        feedback = Feedback(
-            customer=customer if customer else new_customer,
-            employee=Employee.objects.get(employee_id=employee_id),
-            service=Service.objects.get(service_id=service),
-            request_content=content
-        )
-        feedback.save()
-
-        context = {
-            'customer': customer_name,
-            'phone': phone_number,
-            'service': Service.objects.get(service_id=service),
-            'content': content,
-            'isShowModal': True,
-            'services': services
-        }
-    except Exception as e:
-        context = {
-            'customer': customer_name,
-            'phone': phone_number,
-            'service': Service.objects.get(service_id=service),
-            'content': content,
-            'isShowModal': False,
-            'services': services
-        }
-    return render(request,'../templates/request.html', {'context': context})
-
-@csrf_protect
-def register_work_shifts(request):
-
-    employee_id = request.session.get('employee_id')
-    if not employee_id:
-            return redirect("/login")
-        
-    employee = Employee.objects.get(employee_id=employee_id)
-
-    if request.method == 'GET':
-
-        context = {
-            'isSuccess': False,
-            'employee': employee,
-            'default_date': dt.today().strftime('%Y-%m-%d')
-        }
-        return render(request, '../templates/work_shifts.html', {'context': context})
-    
-    shifts_date = request.POST.get('shifts_date')
-    shifts_detail = request.POST.get('shifts_detail')
-    if int(shifts_detail) < 0:
-        messages.error(request, 'Vui lòng chọn ca làm việc!')
-        return redirect(request.META.get('HTTP_REFERER'))
-    
-    detail = None
-    if int(shifts_detail) == 0:
-        detail = "Sáng (9h - 13h00)"
-    elif int(shifts_detail) == 1:
-        detail = "Chiều (13h00 - 17h00)"
-    else:
-        detail = "Tối (17h00 - 20h00)"
-
-    work_shifts = WorkShifts(
-        employee = employee,
-        shifts_date = shifts_date,
-        shifts_detail = detail
-    )
-    work_shifts.save()
-
-    context = {
-        'isSuccess': True,
-        'employee': employee,
-        'default_date': dt.today().strftime('%Y-%m-%d'),
-        'info':{
-            'employee_name': employee.employee_name,
-            'phone_number': employee.phone_number,
-            'shifts_date': shifts_date,
-            'shifts_detail': detail
-        }
-    }
-    return render(request, '../templates/work_shifts.html', {'context': context})
-    
-

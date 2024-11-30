@@ -9,7 +9,7 @@
 <div class="flex-1 p-10">
     <div class="flex justify-between mb-4">
         <h1 class="text-3xl font-semibold text-green-700">Tổng quan lịch hẹn</h1>
-        {% include "header.html" %}
+        {% include "header.html" with employee=context.employee %}
     </div>
 
     <!-- Date and Filters -->
@@ -36,10 +36,10 @@
     <div class="container mx-auto flex flex-row mb-2 border-2 border-gray-300 p-2">
         {% if value|length > 0 %}
             <div class="w-14 h-full border text-black items-center">{{key}}</div>
-            <div class="grid grid-cols-4 gap-8">
+            <div class="grid grid-cols-4 gap-2">
                 {% for info in value %}
                     <!-- Appointment Card Example -->
-                    <div class="bg-white rounded-lg shadow-lg border border-green-500 flex flex-row">
+                    <div class="bg-white rounded-lg shadow-lg border border-green-500 flex flex-row w-auto">
                         {% if info.appointment.status == 0 %}
                             <div class="w-2 bg-red-500 rounded-s-lg"></div>
                         {% elif info.appointment.status == 1 %}

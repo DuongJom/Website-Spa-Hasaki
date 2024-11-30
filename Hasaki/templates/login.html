@@ -16,7 +16,7 @@
 
     <!-- Right Section (Form) -->
     <div class="w-1/2 bg-white flex items-center justify-center">
-        <form class="w-full max-w-md" action="/login" method="post">
+        <form class="w-full max-w-md" action="{% url 'login' %}?next={{ request.GET.next }}" method="post">
             {% csrf_token %}
             <h2 class="text-2xl font-semibold text-center mb-6">Đăng nhập</h2>
 

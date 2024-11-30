@@ -4,3 +4,4 @@ gspread
 oauth2client
 selenium
 bs4
+functools

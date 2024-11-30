@@ -38,18 +38,18 @@ class Appointment(models.Model):
 class Feedback(models.Model):
     request_id = models.AutoField(primary_key=True)
     customer = models.ForeignKey(Customer, to_field='customer_id', on_delete=models.CASCADE)
-    employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
+    employee_id = models.IntegerField(null=True)
     service = models.ForeignKey(Service, to_field='service_id', on_delete=models.CASCADE)
     status = models.IntegerField(null=False, default=0)
     prioritize = models.IntegerField(null=False, default=2)
     request_content = models.TextField(null=False)
-    request_date = models.DateTimeField(null=False, auto_now=True)
+    request_date = models.DateTimeField(null=False)
     is_delete = models.IntegerField(null=False, default=0)
 
 class WorkShifts(models.Model):
     shifts_id = models.AutoField(primary_key=True)
     employee = models.ForeignKey(Employee, to_field='employee_id', on_delete=models.CASCADE)
-    shifts_date = models.DateField(null=False, auto_now=True)
+    shifts_date = models.DateField(null=False)
     shifts_detail = models.TextField(null=False)
     is_delete = models.IntegerField(null=False, default=0)
 

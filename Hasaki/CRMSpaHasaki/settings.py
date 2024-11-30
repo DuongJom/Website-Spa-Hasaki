@@ -33,6 +33,9 @@ COMPRESS_ENABLED = True
 
 STATICFILES_FINDERS = ('compressor.finders.CompressorFinder',)
 
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '?next=schedules'
+
 # Application definition
 
 INSTALLED_APPS = [

@@ -1,6 +1,6 @@
 {% extends "layout_home.html"%} 
 {% load static %}
-
+{% load custom_filters %}
 {% block home_title %}
     Support
 {% endblock %} 
@@ -11,7 +11,8 @@
       <h2 class="text-green-600 text-2xl font-bold mb-4">Điền yêu cầu hỗ trợ</h2>
       <p class="mb-6">Hãy cho chúng tôi biết yêu cầu của bạn, và chúng tôi sẽ phản hồi sớm nhất có thể</p>
 
-      <form class="space-y-4" method="post" action="{% url 'suuport' %}">
+      <form class="space-y-4" method="post" action="{% url 'support' %}">
+        {% csrf_token %}
         <!-- Full Name Field -->
         <div>
             <label for="full_name" class="block text-sm font-medium text-gray-700">
@@ -38,7 +39,7 @@
                 Dịch vụ
                 <span class="text-red-500">*</span>
             </label>
-            <select id="service" name="service" class="mt-1 block w-full border-2 border-gray-300 rounded-md shadow-sm text-sm">
+            <select id="service" name="service" class="mt-1 block w-full border-2 border-gray-300 rounded-md shadow-sm">
                 <option value="-1">Chọn dịch vụ</option>
                 {% for service in context.services %}
                     <option value="{{service.service_id}}">{{service.service_name}}</option>
@@ -84,17 +85,32 @@
           
           <!-- Request Details -->
           <div class="space-y-2">
-            <p><strong>Họ và tên:</strong> Trần Văn Hải</p>
-            <p><strong>Số điện thoại:</strong> 0789411351</p>
-            <p><strong>Dịch vụ:</strong> Dịch vụ chăm sóc da vùng mắt</p>
-            <p><strong>Ngày gửi:</strong> 26.09.2024</p>
-            <p><strong>Nội dung yêu cầu:</strong> Tôi cần sản phẩm nào giúp giảm quầng thâm hiệu quả?</p>
+            <p class="grid grid-cols-2">
+              <strong>Họ và tên:</strong>
+              {{context.customer}}
+            </p>
+            <p class="grid grid-cols-2">
+              <strong>Số điện thoại:</strong>
+              {{context.phone|phoneformat:"10"}}
+            </p>
+            <p class="grid grid-cols-2">
+              <strong>Dịch vụ:</strong> 
+              {{context.service.service_name}}
+            </p>
+            <p class="grid grid-cols-2">
+              <strong>Ngày gửi:</strong> 
+              {{context.request_date|date:"Y-m-d H:i A"}}
+            </p>
+            <p class="grid grid-cols-2">
+              <strong>Nội dung yêu cầu:</strong> 
+              {{context.content}}
+            </p>
           </div>
         </div>
       </div>
     </div>
   </div>
-
+{% endif %}
 <!-- Script to handle modal open/close -->
 <script>
     const closeModalBtn = document.getElementById('closeModalBtn');

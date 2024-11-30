@@ -1,13 +1,13 @@
 {% extends "layout_content.html" %}
 {% load static %}
 {% load custom_filters %}
-{% block content_title %} Customers {% endblock %}
+{% block content_title %} Register Work Shifts {% endblock %}
 
 {% block detail %}
 <div class="flex flex-col w-full p-5">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-green-700">Đăng ký ca làm việc</h1>
-        {% include "header.html" with avatar_path="../static/img/logo.png" %}
+        {% include "header.html" with employee=context.employee %}
     </div>
     <!-- Main Content -->
     <main class="flex flex-row w-full space-x-5 justify-center items-center mx-auto">
@@ -74,11 +74,27 @@
 
             <h2 class="text-xl font-bold text-green-600 mb-4">Bạn đã đăng ký ca làm việc thành công!</h2>
             <h3 class="text-lg font-semibold mb-3">Thông tin đăng ký</h3>
-            <div class="space-y-2">
-                <p><strong>Họ và tên:</strong> {{context.info.employee_name}}</p>
-                <p><strong>Số điện thoại:</strong> {{context.info.phone_number}}</p>
-                <p><strong>Ngày đăng ký:</strong> {{context.info.shifts_date|date:'Y-m-d'}}</p>
-                <p><strong>Ca đăng ký:</strong>{{context.info.shifts_detail}}</p>
+            <div class="grid grid-cols-2">
+                <div class="flex flex-col">
+                    <div class="flex flex-row">
+                        <strong class="w-40">Họ và tên:</strong>
+                        <p>{{context.info.employee_name}}</p>
+                    </div>
+                    <div class="flex flex-row">
+                        <strong class="w-40">Số điện thoại:</strong>
+                        <p>{{context.info.phone_number|phoneformat:"10"}}</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex flex-row">
+                        <strong class="w-40">Ngày đăng ký:</strong>
+                        <p>{{context.info.shifts_date|date:'Y-m-d'}}</p>
+                    </div>
+                    <div class="flex flex-row">
+                        <strong class="w-40">Ca đăng ký:</strong>
+                        <p>{{context.info.shifts_detail}}</p>
+                    </div>
+                </div>
             </div>
 
             <div class="flex justify-end mt-6">
