@@ -15,7 +15,7 @@
             <div class="flex flex-col border border-gray-200">
                 <div class="grid grid-cols-3">
                     <div class="text-gray-700">
-                        <strong>Người dùng:</strong> 
+                        <strong>Khách hàng:</strong> 
                         {{context.customer.customer_name}}
                     </div>
                     <div class="text-gray-700">
@@ -71,14 +71,59 @@
         
             <!-- User Replies -->
             <div class="flex flex-col bg-white p-6 rounded-lg shadow-lg mb-5 max-h-80 overflow-y-auto">
-                <div class="flex mt-2 flex-row rounded-lg space-x-2">
-                    <div class="w-2 bg-green-600 rounded-s-lg h-12"></div>
+                <!--Align employee's reply to right side-->
+                <div class="flex mt-2 flex-row-reverse rounded-lg space-x-2">
+                    <div class="w-2 bg-green-600 rounded-e-lg h-12"></div>
                     <div class="flex space-x-4 flex-col">
                         <p class="text-green-500">
                             <strong>{{context.employee.employee_name}}</strong>
                             <span class="text-gray-400 text-sm ml-2">{% now "Y-m-d H:i:s" %}</span>
                         </p>
-                        <p class="text-gray-500">Bạn đã thử tắt và bật lại điện thoại chưa?</p>
+                        <p class="text-gray-500 text-wrap max-w-80">Bạn đã thử tắt và bật lại điện thoại chưa?</p>
+                    </div>
+                </div>
+                <!--Align customer's reply to left side-->
+                <div class="flex mt-2 flex-row rounded-lg space-x-2">
+                    <div class="w-2 bg-sky-600 rounded-s-lg h-12"></div>
+                    <div class="flex space-x-4 flex-col">
+                        <p class="text-sky-500">
+                            <strong>Lê Ngọc Diệp</strong>
+                            <span class="text-gray-400 text-sm ml-2">{% now "Y-m-d H:i:s" %}</span>
+                        </p>
+                        <p class="text-gray-500 text-wrap max-w-80">Cảm ơn bạn. Tôi đã khắc phục được rồi.</p>
+                    </div>
+                </div>
+                <!--Align employee's reply to right side-->
+                <div class="flex mt-2 flex-row-reverse rounded-lg space-x-2">
+                    <div class="w-2 bg-green-600 rounded-e-lg h-12"></div>
+                    <div class="flex space-x-4 flex-col">
+                        <p class="text-green-500">
+                            <strong>{{context.employee.employee_name}}</strong>
+                            <span class="text-gray-400 text-sm ml-2">{% now "Y-m-d H:i:s" %}</span>
+                        </p>
+                        <p class="text-gray-500 text-wrap w-80">Bạn có gặp vấn đề nào khác nữa không?</p>
+                    </div>
+                </div>
+                <!--Align customer's reply to left side-->
+                <div class="flex mt-2 flex-row rounded-lg space-x-2">
+                    <div class="w-2 bg-sky-600 rounded-s-lg h-12"></div>
+                    <div class="flex space-x-4 flex-col">
+                        <p class="text-sky-500">
+                            <strong>Lê Ngọc Diệp</strong>
+                            <span class="text-gray-400 text-sm ml-2">{% now "Y-m-d H:i:s" %}</span>
+                        </p>
+                        <p class="text-gray-500 text-wrap w-80">Hiện tại thì tôi không gặp vấn đề nào khác cả.</p>
+                    </div>
+                </div>
+                <!--Align employee's reply to right side-->
+                <div class="flex mt-2 flex-row-reverse rounded-lg space-x-2">
+                    <div class="w-2 bg-green-600 rounded-e-lg h-12"></div>
+                    <div class="flex space-x-4 flex-col">
+                        <p class="text-green-500">
+                            <strong>{{context.employee.employee_name}}</strong>
+                            <span class="text-gray-400 text-sm ml-2">{% now "Y-m-d H:i:s" %}</span>
+                        </p>
+                        <p class="text-gray-500 text-wrap w-80">Ok bạn. Nếu có bất kỳ vấn đề nào về Spa của chúng tôi thì xin hãy chia sẻ. Chúng tôi rất mong nhận được đánh giá từ bạn.</p>
                     </div>
                 </div>
             </div>
