@@ -1,14 +1,14 @@
 import calendar
 from django.contrib import messages
-from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
+from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
 from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger
 from .helpers import get_appointment, read_data
-from .enums import AppointmentStatusType, DeletedType
+from .enums import AppointmentStatusType, DeletedType, FeedbackStatusType, PriorityType
 
 tables = {
     'CUSTOMER': 'Customers', 
@@ -590,3 +590,29 @@ def messenger(request):
         }
 
         return render(request, '../templates/messenger.html', {'context': context})
+
+def feedbacks(request):
+    employee_id = request.session.get('employee_id')
+    if request.method == 'GET':
+        if not employee_id:
+            return redirect('/login')
+        
+        employee = Employee.objects.get(employee_id=employee_id)
+        feedbacks = Feedback.objects.all().values()
+        info = []
+
+        for feedback in feedbacks:
+            customer = Customer.objects.filter(customer_id=feedback['customer_id']).values().first()
+            service = Service.objects.filter(service_id=feedback['service_id']).values().first()
+            data = {
+                'feedback': feedback,
+                'customer': customer,
+                'service': service,
+            }
+            info.append(data)
+            
+        context = {
+            'employee': employee,
+            'info': info,        
+        }
+        return render(request, '../templates/feedback.html', {'context': context})

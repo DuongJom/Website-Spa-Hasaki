@@ -15,3 +15,9 @@ def phoneformat(value, arg):
     if not value.startswith("0") or len(value) == int(arg) - 1:
         return "0" + value
     return value
+
+@register.filter(name='item')
+def item(value, arg=None):
+    if value:
+        return value  # Return the first item from the list (or any custom logic)
+    return None
