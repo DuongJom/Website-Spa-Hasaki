@@ -491,17 +491,17 @@ def customers(request):
         }
         return render(request,'../templates/customers.html', {'context': context})
 
-def cancel_appointment(request, id):
+def cancel_appointment(request, appointment_id):
     if request.method == 'POST':
         previous_url = request.META.get('HTTP_REFERER')
-        appointment = Appointment.objects.get(appointment_id=id)
+        appointment = Appointment.objects.get(appointment_id=appointment_id)
 
         if appointment:
             appointment.status = AppointmentStatusType.CANCEL.value
             appointment.save()
             return redirect(previous_url)
 
-def detail_customer(request, id):
+def detail_customer(request, customer_id):
     if request.method == 'GET':
         if not request.session.get('employee_id'):
             return redirect('/login')
@@ -516,7 +516,7 @@ def detail_customer(request, id):
         day = int(day) if day else today.day
 
         customer = Customer.objects.get(customer_id=id)
-        appointments = Appointment.objects.filter(customer_id=id)\
+        appointments = Appointment.objects.filter(customer_id=customer_id)\
             .filter(appointment_date=date(year=year, month=month, day=day)).values()
 
         employee_id = request.session.get('employee_id')
@@ -532,9 +532,9 @@ def detail_customer(request, id):
         }
         return render(request, '../templates/customer_detail_info.html', {'context':context})
     
-def delete_customer(request, id):
+def delete_customer(request, customer_id):
     if request.method == 'POST':
-        customer = Customer.objects.get(customer_id=id)
+        customer = Customer.objects.get(customer_id=customer_id)
         if customer:
             appointments = Appointment.objects.filter(customer_id=customer.customer_id)
             if appointments:
@@ -545,9 +545,9 @@ def delete_customer(request, id):
             return redirect("/customers")
 
 @csrf_protect
-def edit_customer(request, id):
+def edit_customer(request, customer_id):
     if request.method == 'POST':
-        customer = Customer.objects.get(customer_id=id)
+        customer = Customer.objects.get(customer_id=customer_id)
         if customer:
             customer.customer_name = request.POST.get('customer_name')
             customer.email = request.POST.get('email')
@@ -582,7 +582,6 @@ def messenger(request):
             detailData = data[0]
 
         chatTemplate = render_to_string('../templates/messenger_content.html', {'context': detailData}, request)
-        #print(chatTemplate)
 
         context = {
             'data': data,
@@ -616,3 +615,23 @@ def feedbacks(request):
             'info': info,        
         }
         return render(request, '../templates/feedback.html', {'context': context})
+    
+def feedback_detail(request, feedback_id):
+    employee_id = request.session.get('employee_id')
+    if request.method == 'GET':
+        if not employee_id:
+            return redirect('/login')
+        
+    if request.method == 'GET':
+        feedback = Feedback.objects.get(request_id=feedback_id)
+        employee = Employee.objects.get(employee_id=employee_id)
+        customer = Customer.objects.get(customer_id=feedback.customer_id)
+        service = Service.objects.get(service_id=feedback.service_id)
+
+        context = {
+            'feedback': feedback,
+            'customer': customer,
+            'employee': employee,
+            'service': service,
+        }
+        return render(request, '../templates/feedback_detail.html', {'context': context})
