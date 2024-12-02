@@ -515,7 +515,7 @@ def detail_customer(request, customer_id):
         month = int(month) if month else today.month
         day = int(day) if day else today.day
 
-        customer = Customer.objects.get(customer_id=id)
+        customer = Customer.objects.get(customer_id=customer_id)
         appointments = Appointment.objects.filter(customer_id=customer_id)\
             .filter(appointment_date=date(year=year, month=month, day=day)).values()
 
@@ -556,36 +556,38 @@ def edit_customer(request, customer_id):
             return redirect('/customers/detail/{0}'.format(id))
 
 def messenger(request):
-    if request.method == 'GET':
-        if not request.session.get('employee_id'):
+    if not request.session.get('employee_id'):
             return redirect('/login')
-        
+
+    if request.method == 'GET':
         customer_id = request.GET.get('customer_id')
         customers = Messenger.objects.values('customer_id').distinct()
         data = []
-
-        for customer in customers:
-            messages = Messenger.objects.filter(customer_id=customer['customer_id']).values('message').order_by('-sent_time')
-            info = {
-                'customer': Customer.objects.get(customer_id=customer['customer_id']),
-                'messages': messages
-            }
-            data.append(info)
-
         detailData = None
-        if customer_id:
-            for dta in data:
-                if dta['customer'].customer_id == int(customer_id):
-                    detailData = dta
-                    break
-        else:
-            detailData = data[0]
+        if customers.count() > 0:
+            for customer in customers:
+                messages = Messenger.objects.filter(customer_id=customer['customer_id']).values('message').order_by('-sent_time')
+                info = {
+                    'customer': Customer.objects.get(customer_id=customer['customer_id']),
+                    'messages': messages
+                }
+                data.append(info)
+
+            
+            if customer_id:
+                for dta in data:
+                    if dta['customer'].customer_id == int(customer_id):
+                        detailData = dta
+                        break
+            else:
+                detailData = data[0]
 
         chatTemplate = render_to_string('../templates/messenger_content.html', {'context': detailData}, request)
 
         context = {
             'data': data,
-            'chatTemplate': chatTemplate
+            'chatTemplate': chatTemplate,
+            'isShowChatContent': True if len(data) > 0 else False
         }
 
         return render(request, '../templates/messenger.html', {'context': context})

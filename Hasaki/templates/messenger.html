@@ -30,7 +30,9 @@
             </div>
             {% endfor %}
     </div>
-    <div class="w-full">{{context.chatTemplate|safe}}</div>
+    {% if context.isShowChatContent %}
+    <div id="chat-content" class="w-full">{{context.chatTemplate|safe}}</div>
+    {% endif %}
 </div>
 
 <script>
@@ -39,7 +41,11 @@
         const listItemIndex = listItem.getAttribute('data-index');
         const customer_id = listItem.getAttribute('data-customer-id');
         const allListItems = document.querySelectorAll('li');
-        
+        const data_count = "{{context.data|length}}";
+        if (data_count == 0){
+            return;
+        }
+        document.getElementById('chat-content').classList.remove('hidden');
         allListItems.forEach(item => {
             const index = item.getAttribute('data-index');
             if( listItemIndex === index) {
@@ -58,7 +64,6 @@
                 return res.text();
             })
             .then(html =>{
-                console.log(html);
                 document.getElementById('content').innerHTML = html;
             })
             .catch((err) => console.log(err))
