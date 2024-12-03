@@ -16,8 +16,20 @@ def phoneformat(value, arg):
         return "0" + value
     return value
 
-@register.filter(name='item')
-def item(value, arg=None):
-    if value:
-        return value  # Return the first item from the list (or any custom logic)
-    return None
+@register.filter
+def translate_day(value):
+    value = value.lower()
+    if value == "monday":
+        return "Thứ 2"
+    elif value == "tuesday":
+        return "Thứ 3"
+    elif value == "wednesday":
+        return "Thứ 4"
+    elif value == "thursday":
+        return "Thứ 5"
+    elif value == "friday":
+        return "Thứ 6"
+    elif value == "saturday":
+        return "Thứ 7"
+    else:
+        return "Chủ nhật"

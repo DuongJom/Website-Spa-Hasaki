@@ -1,5 +1,6 @@
 {% extends "layout_content.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block content_title %}Personal Work Shifts{% endblock %}
 {% block detail %}
 <!-- Main Content -->
@@ -46,7 +47,7 @@
       <tbody>
         {% for dt in context.data %}
         <tr class="border border-gray-200 h-10">
-          <td class="w-1/6 text-center border border-gray-200">{{dt.day|date:'l'}}</td>
+          <td class="w-1/6 text-center border border-gray-200">{{dt.day|date:'l'|translate_day}}</td>
           <td class="w-1/6 text-center border border-gray-200">{{dt.day|date:'d/m'}}</td>
           <td class="w-1/6 border border-gray-200 {% if dt.is_morning %} bg-yellow-500 text-white {% else %} bg-white text-black {% endif %}"></td>
           <td class="w-1/6 border border-gray-200 {% if dt.is_afternoon %} bg-yellow-500 text-white {% else %} bg-white text-black {% endif %}"></td>

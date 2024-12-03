@@ -4,3 +4,5 @@ gspread
 oauth2client
 selenium
 bs4
+channels==4.2.0
+daphne==4.1.2

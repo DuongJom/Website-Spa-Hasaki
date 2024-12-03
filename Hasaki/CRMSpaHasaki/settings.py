@@ -31,6 +31,10 @@ COMPRESS_ROOT = BASE_DIR / 'static'
 
 COMPRESS_ENABLED = True
 
+# Set expired time for session and cookies
+SESSION_COOKIE_AGE = 1800
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 STATICFILES_FINDERS = ('compressor.finders.CompressorFinder',)
 
 # Application definition
