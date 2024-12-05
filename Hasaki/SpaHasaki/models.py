@@ -1,6 +1,13 @@
 from django.db import models
 
 # Create your models here.
+class Account(models.Model):
+    account_id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=255, null=False)
+    password = models.CharField(max_length=255, null=False)
+    role = models.IntegerField(null=False, default=0)
+    is_delete = models.IntegerField(null=False, default=0)
+
 class Customer(models.Model):
     customer_id = models.AutoField(primary_key=True)
     customer_name = models.CharField(max_length=255, null=False)
@@ -20,7 +27,6 @@ class Employee(models.Model):
     employee_name = models.CharField(max_length=255, null=False)
     email = models.EmailField(max_length=255, null=True)
     phone_number = models.CharField(max_length=10, null=False)
-    password = models.CharField(max_length=512, null=False)
     created_date = models.DateTimeField(null=False, auto_now=True)
 
 class Appointment(models.Model):

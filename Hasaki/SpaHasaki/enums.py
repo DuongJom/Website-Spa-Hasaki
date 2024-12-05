@@ -24,3 +24,6 @@ class FeedbackStatusType(Enum):
     PROCESSING = 1
     PROCESSED = 2
 
+class RoleType(Enum):
+    CUSTOMER = 0
+    EMPLOYEE = 1

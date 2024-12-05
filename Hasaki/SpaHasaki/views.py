@@ -3,14 +3,18 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
-from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger
+from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger, Account
 from .helpers import get_appointment, read_data
-from .enums import AppointmentStatusType, DeletedType, FeedbackStatusType, PriorityType
+from .enums import AppointmentStatusType, DeletedType, RoleType
+
+User = get_user_model()
 
 tables = {
+    'ACCOUNT': 'Accounts',
     'CUSTOMER': 'Customers', 
     'SERVICE': 'Services', 
     'EMPLOYEE': 'Employees', 
@@ -22,8 +26,20 @@ tables = {
 
 def home(request):
     if request.method == "GET":
+        customer_id = request.session.get('customer')
+        customer = Customer.objects.get(customer_id=int(customer_id))
+            
+        context = {
+            'customer': customer
+        }
+        return render(request,'../templates/home.html', {'context': context})
+    
+@csrf_protect
+def login(request):
+    if request.method == 'GET':
         for key, value in tables.items():
-            if (value == tables['CUSTOMER'] and Customer.objects.all().values().count() > 0) or \
+            if (value == tables['ACCOUNT'] and Account.objects.all().values().count() > 0) or \
+                (value == tables['CUSTOMER'] and Customer.objects.all().values().count() > 0) or \
                 (value == tables['SERVICE'] and Service.objects.all().values().count() > 0) or \
                 (value == tables['APPOINTMENT'] and Appointment.objects.all().values().count() > 0) or \
                 (value == tables['EMPLOYEE'] and Employee.objects.all().values().count() > 0) or \
@@ -34,6 +50,18 @@ def home(request):
 
             lst_data = read_data(value)
             for data in lst_data:
+                if value == tables['ACCOUNT']:
+                    if not Account.objects.filter(username=data['username']):
+                        account = Account(account_id=data['account_id'],
+                                          username=data['username'],
+                                          password=data['password'],
+                                          role=data['role'],
+                                          is_delete=data['is_delete'])
+                        account.save()
+
+                    if not User.objects.filter(username=data['username']).exists():
+                        User.objects.create_superuser(username=data['username'], email=data['username'], password=data['password'])
+                        
                 if value == tables['CUSTOMER']:
                     if not Customer.objects.filter(customer_id=data['customer_id']):
                         customer = Customer(customer_id=data['customer_id'],
@@ -55,7 +83,6 @@ def home(request):
                                             employee_name=data['employee_name'],
                                             email=data['email'],
                                             phone_number=data['phone_number'],
-                                            password=data['password'],
                                             created_date=data['created_date'])
                         employee.save()
                 elif value == tables['APPOINTMENT']:
@@ -102,11 +129,6 @@ def home(request):
                                               is_resolved=data['is_resolved'],
                                               is_delete=data['is_delete'])
                         messenger.save()
-        return render(request,'../templates/home.html')
-    
-@csrf_protect
-def login(request):
-    if request.method == 'GET':
         return render(request, '../templates/login.html')
     
     username = request.POST.get('username')
@@ -116,13 +138,20 @@ def login(request):
         messages.error(request, 'Vui lòng kiểm tra lại tài khoản đăng nhập!')
         return redirect(request.path)
     
-    employees = Employee.objects.filter(Q(email=username) | Q(phone_number=username)).values()
-
-    for employee in employees:
-        if employee['password'] == password:
-            request.session['employee_id'] = employee['employee_id']
-            messages.success(request, "Đăng nhập thành công!")
+    account = Account.objects.get(username=username, password=password)
+    if account:
+        messages.success(request, "Đăng nhập thành công!")
+        if account.role == RoleType.CUSTOMER.value:
+            customer = Customer.objects.get(email=account.username)
+            if customer:
+                request.session['customer'] = customer.customer_id
+            return redirect("/home")
+        elif account.role == RoleType.EMPLOYEE.value:
+            employee = Employee.objects.get(email=account.username)
+            if employee:
+                request.session['employee'] = employee.employee_id
             return redirect("/schedules")
+            
         
     messages.error(request, 'Tài khoản không tồn tại!')
     return redirect(request.path)

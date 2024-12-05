@@ -1,7 +1,7 @@
 {% extends "layout_home.html"%}
 {% load static %}
 {% block home_title %} Trang chủ {% endblock %}
-
+{% block customer_name %}{{context.customer.customer_name}}{% endblock %}
 {% block home_content %}
 <!-- Hero Section -->
 <section class="text-center bg-white w-full">
