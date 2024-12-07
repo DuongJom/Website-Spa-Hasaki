@@ -1,0 +1,244 @@
+{% extends "layout_content.html" %}
+{% load static %}
+{% block content_title %} Messenger {% endblock %}
+{% block detail %}
+<div class="flex h-screen w-10/12">
+    <!-- Sidebar -->
+    <div class="w-1/4 bg-white border-r p-4">
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-green-700">Chat cùng Spa</h2>
+            <hr class="mt-5 border-2 border-gray-200">
+        </div>
+        {% for item in context.data %}
+            <div>
+                <ul class="space-y-4">
+                    <li data-customer-id="{{item.customer.customer_id}}" data-index="{{ forloop.counter0 }}" 
+                        class="bg-transparent rounded p-2 flex items-center hover:bg-green-400">
+                        <!-- Button inside the li -->
+                        <button type="submit" onclick="showChat(this)" class="w-auto bg-transparent flex flex-row">
+                            <span class="w-8 h-8 rounded-full bg-transparent mr-2">
+                                <img src="{% static 'img/logo.png' %}" alt="avatar image" class="rounded-full w-8 h-8">
+                            </span>
+                            <div class="flex flex-col">
+                                <h4 class="text-sm font-semibold text-left">{{ item.customer.customer_name }}</h4>
+                                <p class="text-xs text-gray-500 justify-start text-left truncate max-w-40">{{ item.messages.0.message }}</p>
+                            </div>
+                            <input type="hidden" name="customer_id" value="{{ item.customer.customer_id }}">
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        {% empty %}
+            <div>No message.</div>
+        {% endfor %}
+    </div>
+
+    <!-- Main Messenger Section -->
+    <div id="chat-content" class="flex-1 flex flex-col w-full h-full">
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between bg-white p-4 border-b">
+        <h2 id="customer" class="text-lg font-semibold"></h2>
+        <div class="flex items-center space-x-4">
+            <button class="p-2 bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                </svg>
+            </button>
+            <button class="p-2 bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="id_chat_item_container" class="flex-1 p-6 bg-gray-50 overflow-y-auto space-y-4"></div>
+
+    <!-- Input Section -->
+    <div class="p-4 bg-white border-t flex items-center space-x-2">
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/attach-file.png' %}" alt="attach file" class="w-5 h-5 bg-transparent">
+        </button>
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/chain.png' %}" alt="attach link" class="w-5 h-5 bg-transparent">
+        </button>
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/at-sign.png' %}" alt="mention" class="w-5 h-5 bg-transparent">
+        </button>
+        <input id="id_message_send_input" type="text" placeholder="Type your message here..." class="flex-1 p-2 border rounded-lg">
+        <button id="id_message_send_button" class="p-2 bg-transparent text-white rounded-full">
+            <img src="{% static 'img/send-message.png' %}" alt="send message" class="bg-transparent w-5 h-5">
+        </button>
+    </div>
+</div>
+</div>
+
+<script>
+
+    let chatSocket = null;  // Define chatSocket at a higher level to be reused across functions
+    var messageContainer = document.querySelector("#id_chat_item_container");
+    document.querySelector("#id_message_send_input").focus();
+    document.querySelector("#id_message_send_input").onkeyup = function (e) {
+        if (e.keyCode == 13) {
+            document.querySelector("#id_message_send_button").click();
+        }
+    };
+    document.querySelector("#id_message_send_button").onclick = function (e) {
+        var messageInput = document.querySelector("#id_message_send_input").value;
+        const now = new Date();
+        const year = now.getFullYear();                             // Get the full year (e.g., 2024)
+        const month = String(now.getMonth() + 1).padStart(2, '0');  // Get the month (0-11, so add 1, and pad to 2 digits)
+        const day = String(now.getDate()).padStart(2, '0');         // Get the day of the month (1-31, pad to 2 digits)
+        const hours = String(now.getHours()).padStart(2, '0');      // Get the hours (0-23, pad to 2 digits)
+        const minutes = String(now.getMinutes()).padStart(2, '0');  // Get the minutes (0-59, pad to 2 digits)
+        // Format the result as "YYYY-MM-DD HH:MM"
+        const time = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+        chatSocket.send(JSON.stringify({
+            message: messageInput,
+            username: "{{request.user.username}}",
+            time: time
+        }));
+    };
+
+    // Function to initialize or reconnect WebSocket for the selected customer
+    function connectWebSocket(customerId) {
+        // Close the existing WebSocket connection if one exists
+        if (chatSocket !== null) {
+            chatSocket.close();
+            messageContainer.innerHTML = "";
+        }
+
+        // Dynamically create WebSocket URL based on customer ID
+        const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const wsUrl = `${wsScheme}${window.location.host}/messenger/${customerId}/`;
+
+        // Create new WebSocket connection
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function() {
+            console.log("WebSocket connection established for customer:", customerId);
+        };
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+        
+        if ('messages' in data) {
+            document.getElementById('customer').innerHTML = data.messages[0].sender;
+            data.messages.forEach(dt => {
+                var div = document.createElement("div");
+                div.className = (dt.is_sent_customer === 1) ? "flex flex-row justify-end" : "flex flex-row justify-start";
+                if(dt.is_sent_customer === 0){
+                    div.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-gray-300">
+                            <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold">${dt.sender}</div>
+                            <div class="bg-white p-3 rounded-lg shadow">
+                                <p class="max-w-64 text-wrap break-words">${dt.message}</p>
+                                <div class="text-sm text-gray-500 text-right">${dt.time}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }
+                else{
+                    div.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div>
+                            <div class="text-sm font-semibold text-right">${dt.sender}</div>
+                            <div class="bg-white p-3 rounded-lg shadow">
+                                <p class="max-w-64 text-wrap break-words">${dt.message}</p>
+                                <div class="text-sm text-gray-500 text-right">${dt.time}</div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-gray-300">
+                            <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                        </div>
+                    </div>
+                `;
+                }
+                
+                document.querySelector("#id_message_send_input").value = "";
+                messageContainer.appendChild(div);
+            }); 
+        }
+        else{
+            var div = document.createElement("div");
+            div.className = (data.username === "{{request.user.username}}") ? "flex flex-row justify-end" : "flex flex-row justify-start";
+            div.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 rounded-full bg-gray-300">
+                        <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold">${data.sender}</div>
+                        <div class="bg-white p-3 rounded-lg shadow">
+                            <p>${data.message}</p>
+                            <div class="text-sm text-gray-500 text-right">${data.time}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.querySelector("#id_message_send_input").value = "";
+            messageContainer.appendChild(div);
+        }
+        
+        // Scroll to the bottom of the chat container
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+        };
+
+        chatSocket.onclose = function() {
+            console.log("WebSocket connection closed for customer:", customerId);
+        };
+
+        chatSocket.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+    }
+
+    // In your showChat() function, reconnect the WebSocket when a new customer is selected
+    function showChat(button) {
+        const listItem = button.closest('li');
+        const listItemIndex = listItem.getAttribute('data-index');
+        const customerId = listItem.getAttribute('data-customer-id');
+        const allListItems = document.querySelectorAll('li');
+
+        // Ensure that a valid customer ID is selected
+        if (!customerId) {
+            return;
+        }
+
+        // Update the UI to reflect the selected customer
+        document.getElementById('chat-content').classList.remove('hidden');
+        allListItems.forEach(item => {
+            const index = item.getAttribute('data-index');
+            if (listItemIndex === index) {
+                item.classList.add('bg-blue-100', 'border-2', 'border-green-500');
+            } else {
+                item.classList.remove('bg-blue-100', 'border-2', 'border-green-500');
+            }
+        });
+
+        // Reconnect WebSocket with the new customer ID
+        connectWebSocket(customerId);
+
+        // // Fetch the chat messages for the selected customer
+        // fetch(`/messenger?customer_id=${customerId}`)
+        //     .then((res) => {
+        //         if (!res.ok) {
+        //             throw new Error('Network response was not ok');
+        //         }
+        //         return res.text();
+        //     })
+        //     .then((html) => {
+        //         document.getElementById('content').innerHTML = html;
+        //     })
+        //     .catch((err) => console.log(err));
+    }
+
+</script>
+{% endblock %}
