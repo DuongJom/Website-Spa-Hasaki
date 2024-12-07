@@ -145,3 +145,11 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ngocduong5642@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'pdin uqcd sdtf tgpe'  # Replace with your email password
+DEFAULT_FROM_EMAIL = 'spahasaki@gmail.com'  # The default "From" email address

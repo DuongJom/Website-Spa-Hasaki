@@ -9,14 +9,32 @@
     <!-- Navbar -->
     <nav class="bg-green-600 px-4 py-2 text-white flex justify-between items-center h-auto">
         <div class="text-xl font-bold">
-            <a href="/" class="text-white">HASAKI.VN</a>
+            <a href="/home" class="text-white">HASAKI.VN</a>
         </div>
-        <div class="flex space-x-6">
-            <a href="/booking" class="hover:text-gray-300 {% if request.path == '/booking' %} underline text-white font-semibold {% endif %}">Đặt hẹn</a>
-            <a href="/support" class="hover:text-gray-300 {% if request.path == '/support' %} underline text-white font-semibold {% endif %}">Yêu cầu hỗ trợ</a>
-            <a href="/chat" class="hover:text-gray-300 flex flex-row items-center {% if request.path == '/chat' %} underline text-white font-semibold {% endif %}">
-                Messenger
+        <div class="flex space-x-8 items-center">
+            <a href="/booking" 
+                class="home-navbar-item
+                    {% if request.path == '/booking' %} home-navbar-item-highlight {% endif %}">
+                <span>Đặt hẹn</span>
+                <img src="{% static 'img/booking.png' %}" alt="messenger icon" class="w-5 h-5">   
+            </a>
+            <a href="/support" 
+                class="home-navbar-item
+                    {% if request.path == '/support' %} home-navbar-item-highlight {% endif %}">
+                <span>Yêu cầu hỗ trợ</span>
+                <img src="{% static 'img/customer-care.png' %}" alt="messenger icon" class="w-5 h-5"> 
+            </a>
+            <a href="/chat" 
+                class="home-navbar-item
+                    {% if request.path == '/chat' %} home-navbar-item-highlight {% endif %}">
+                <span>Messenger</span>
                 <img src="{% static 'img/messenger.png' %}" alt="messenger icon" class="w-5 h-5">
+            </a>
+            <a href="/logout" 
+                class="home-navbar-item
+                    {% if request.path == '/logout' %} home-navbar-item-highlight {% endif %}">
+                <span>Đăng xuất</span>
+                <img src="{% static 'img/logout.png' %}" alt="messenger icon" class="w-5 h-5">
             </a>
         </div>
         <div class="text-gray-500 flex flex-row w-auto h-auto bg-transparent space-x-2">

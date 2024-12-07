@@ -2,10 +2,12 @@ import calendar
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, authenticate
 from django.shortcuts import render, redirect
-from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.conf import settings
+from twilio.rest import Client
+from django.core.mail import send_mail
+import random
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
 from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger, Account
@@ -147,7 +149,7 @@ def login(request):
     if account:
         messages.success(request, "Đăng nhập thành công!")
         if account.role == RoleType.CUSTOMER.value:
-            customer = Customer.objects.get(email=account.username)
+            customer = Customer.objects.filter(email=account.username).first()
             if customer:
                 request.session['customer'] = customer.customer_id
             return redirect("/home")
@@ -444,20 +446,100 @@ def work_shifts(request):
         }
         return render(request, '../templates/personal_work_shifts.html', {'context': context})
 
+# Function to generate a random OTP
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+# View to send the OTP via SMS
 @csrf_protect
-def phone_verify(request):
+def email_verify(request):
     if request.method == 'POST':
+        email = request.POST.get('email')
+
+        is_email_exist = Account.objects.filter(username=email).exists() and User.objects.filter(username=email).exists()
+
+        if not email or not is_email_exist:
+            messages.error(request, 'Please provide a valid email address.')
+            return redirect(request.path)
+
+        request.session['email'] = email
+
+        # Generate OTP
+        otp_code = generate_otp()
+
+        # Store OTP in session (for verification later)
+        request.session['otp'] = otp_code
+
+        try:
+            # Send OTP via email
+            send_mail(
+                'Your OTP Code',  # Subject
+                f'Your OTP code is {otp_code}. Please use it to verify your email.',  # Message content
+                settings.DEFAULT_FROM_EMAIL,  # From email (use the email from settings)
+                [email],  # Recipient email
+                fail_silently=False,  # Set to True to suppress errors
+            )
+            messages.success(request, 'OTP sent successfully to your email!')
+            return redirect('/forgot-password/otp-verify')  # Redirect to OTP verification page
+        except Exception as e:
+            messages.error(request, f"Error sending OTP")
+            print(str(e))
+            return redirect(request.path)
+        
+    return render(request, '../templates/email_verification.html')
+
+@csrf_protect
+def otp_verify(request):
+    if request.method == 'GET':
+        return render(request, '../templates/otp_verification.html')
+    
+    code1 = request.POST.get('code1')
+    code2 = request.POST.get('code2')
+    code3 = request.POST.get('code3')
+    code4 = request.POST.get('code4')
+    code5 = request.POST.get('code5')
+    code6 = request.POST.get('code6')
+    otp = code1 + code2 + code3 + code4 + code5 + code6
+
+    if otp == request.session.get('otp'):
+        messages.success(request, 'Xác thực OTP thành công!')
         return redirect('/reset-password')
-    return render(request, '../templates/phone_verification.html')
+    
+    messages.error(request, 'OTP không hợp lệ!')
+    return redirect('/forgot-password/email-verify')
 
 def logout(request):
     request.session.pop('employee', None)
+    request.session.pop('customer', None)
     return redirect('/')
 
 @csrf_protect
 def reset_password(request):
     if request.method == 'GET':
         return render(request, '../templates/new_password.html')
+    
+    new_password = request.POST.get('new_password')
+    confirm_password = request.POST.get('confirm_password')
+
+    if not new_password or not confirm_password:
+        messages.error(request, 'Vui lòng điền thông tin password!')
+        return redirect(request.path)
+    
+    if new_password != confirm_password:
+        messages.error(request, 'Xác nhận mật khẩu không hợp lệ!')
+        return redirect(request.path)
+    
+    email = request.session.get('email')
+    account = Account.objects.filter(username=email).first()
+    if account:
+        account.password = new_password
+        account.save()
+
+    user = User.objects.filter(email=email).first()
+    if user:
+        user.delete()
+        User.objects.create_superuser(username=email, email=email, password=new_password)
+    messages.success(request, 'Cập nhật mật khẩu thành công!')
     return redirect('/')
 
 def schedules(request):

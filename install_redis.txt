@@ -1,0 +1,11 @@
+1. Cài đặt WSL
+- Mở cửa sổ Window PowerShell
+- Chạy lệnh: wsl --install -d Ubuntu-24.04
+- Nhấn Enter để tiến hành cài đặt môi trường Ubuntu
+2. Cài đặt Redis
+- Tại cửa sổ Window PowerShell, chạy lệnh: wsl -> nhấn Enter để vào môi trường Ubuntu
+- Cài Redis server với lệnh: apt install redis-server
+- Sau khi nhấn Enter, nếu có báo lỗi không cài đặt dươc thì tiến hành update system với lệnh: apt update
+- Chạy lại lệnh cài đặt Redis server và chọn "Y" khi được hỏi [Y/n] trong quá trình cài đặt
+- Sau khi cài đặt xong thì start server với lệnh: service redis-server start
+- Kiểm tra Redis server đã chạy đúng hay chưa bằng lệnh: redis-cli ping, nếu nhận được "PONG" thì mọi thứ ok
