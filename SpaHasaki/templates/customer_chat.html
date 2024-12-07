@@ -1,0 +1,166 @@
+{% extends "layout_home.html" %}
+{% load static %}
+{% block home_title %} Chat {% endblock %}
+
+{% block customer_name %}{{context.customer.customer_name}}{% endblock %}
+
+{% block home_content %}
+<!-- Main Messenger Section -->
+<div id="chat-content" class="flex-1 flex flex-col w-full h-3/4">
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between bg-white p-4 border-b">
+        <h2 class="text-lg font-semibold">Spa Hasaki</h2>
+        <div class="flex items-center space-x-4">
+            <button class="p-2 bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                </svg>
+            </button>
+            <button class="p-2 bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="id_chat_item_container" class="flex-1 p-6 bg-gray-50 overflow-y-auto space-y-4"></div>
+
+    <!-- Input Section -->
+    <div class="p-4 bg-white border-t flex items-center space-x-2">
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/attach-file.png' %}" alt="attach file" class="w-5 h-5 bg-transparent">
+        </button>
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/chain.png' %}" alt="attach link" class="w-5 h-5 bg-transparent">
+        </button>
+        <button class="p-2 rounded-full">
+            <img src="{% static 'img/at-sign.png' %}" alt="mention" class="w-5 h-5 bg-transparent">
+        </button>
+        <input id="id_message_send_input" type="text" placeholder="Type your message here..." class="flex-1 p-2 border rounded-lg">
+        <button id="id_message_send_button" class="p-2 bg-transparent text-white rounded-full">
+            <img src="{% static 'img/send-message.png' %}" alt="send message" class="bg-transparent w-5 h-5">
+        </button>
+    </div>
+</div>
+<script>
+    let chatSocket = null;  // Define chatSocket at a higher level to be reused across functions
+    var messageContainer = document.querySelector("#id_chat_item_container");
+    document.querySelector("#id_message_send_input").focus();
+    document.querySelector("#id_message_send_input").onkeyup = function (e) {
+        if (e.keyCode == 13) {
+            document.querySelector("#id_message_send_button").click();
+        }
+    };
+    document.querySelector("#id_message_send_button").onclick = function (e) {
+        var messageInput = document.querySelector("#id_message_send_input").value;
+        const now = new Date();
+        const year = now.getFullYear();                             // Get the full year (e.g., 2024)
+        const month = String(now.getMonth() + 1).padStart(2, '0');  // Get the month (0-11, so add 1, and pad to 2 digits)
+        const day = String(now.getDate()).padStart(2, '0');         // Get the day of the month (1-31, pad to 2 digits)
+        const hours = String(now.getHours()).padStart(2, '0');      // Get the hours (0-23, pad to 2 digits)
+        const minutes = String(now.getMinutes()).padStart(2, '0');  // Get the minutes (0-59, pad to 2 digits)
+        // Format the result as "YYYY-MM-DD HH:MM"
+        const time = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+        chatSocket.send(JSON.stringify({
+            message: messageInput,
+            username: "{{request.user.username}}",
+            time: time
+        }));
+    };
+
+    // Close the existing WebSocket connection if one exists
+    if (chatSocket !== null) {
+            chatSocket.close();
+            messageContainer.innerHTML = "";
+        }
+
+        // Dynamically create WebSocket URL based on customer ID
+        const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const wsUrl = `${wsScheme}${window.location.host}/messenger/1/`;
+
+        // Create new WebSocket connection
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function() {
+        };
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+        
+        if ('messages' in data) {
+            data.messages.forEach(dt => {
+                var div = document.createElement("div");
+                div.className = (dt.is_sent_customer === 0) ? "flex flex-row justify-end" : "flex flex-row justify-start";
+                if(dt.is_sent_customer === 1){
+                    div.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-gray-300">
+                            <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold">${dt.sender}</div>
+                            <div class="bg-white p-3 rounded-lg shadow">
+                                <p class="max-w-64 text-wrap break-words">${dt.message}</p>
+                                <div class="text-sm text-gray-500 text-right">${dt.time}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }
+                else{
+                    div.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div>
+                            <div class="text-sm font-semibold text-right">${dt.sender}</div>
+                            <div class="bg-white p-3 rounded-lg shadow">
+                                <p class="max-w-64 text-wrap break-words">${dt.message}</p>
+                                <div class="text-sm text-gray-500 text-right">${dt.time}</div>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-gray-300">
+                            <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                        </div>
+                    </div>
+                `;
+                }
+                
+                document.querySelector("#id_message_send_input").value = "";
+                messageContainer.appendChild(div);
+            }); 
+        }
+        else{
+            var div = document.createElement("div");
+            div.className = (data.username === "{{request.user.username}}") ? "flex flex-row justify-end" : "flex flex-row justify-start";
+            div.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 rounded-full bg-gray-300">
+                        <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold">${data.sender}</div>
+                        <div class="bg-white p-3 rounded-lg shadow">
+                            <p>${data.message}</p>
+                            <div class="text-sm text-gray-500 text-right">${data.time}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.querySelector("#id_message_send_input").value = "";
+            messageContainer.appendChild(div);
+        }
+        
+        // Scroll to the bottom of the chat container
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+        };
+
+        chatSocket.onclose = function() {
+        };
+
+        chatSocket.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+</script>
+{% endblock %}

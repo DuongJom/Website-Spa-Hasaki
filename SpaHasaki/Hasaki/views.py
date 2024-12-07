@@ -590,11 +590,9 @@ def messenger(request):
         if not request.user.is_authenticated:
             return redirect('/login')
         
-        customer_id = request.GET.get('customer_id')
         username = request.GET.get('username')
         if username:
             customer = Customer.objects.filter(email=username).first()
-            customer_id = customer.customer_id
 
         customers = Messenger.objects.values('customer_id').distinct()
         data = []
@@ -612,6 +610,13 @@ def messenger(request):
 
         return render(request, '../templates/messenger.html', {'context': context})
 
+def customer_chat(request):
+    if request.method == 'GET':
+        context = {
+            'customer': Customer.objects.filter(email=request.user.username).first()
+        }
+        return render(request, '../templates/customer_chat.html', {'context': context})
+    
 def feedbacks(request):
     employee_id = request.session.get('employee')
     if request.method == 'GET':

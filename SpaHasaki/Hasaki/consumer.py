@@ -67,7 +67,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             employee = user
         message = Messenger(
             customer=Customer.objects.get(customer_id=self.customer_id), 
-            employee=employee,
+            employee=employee if employee else Employee.objects.filter(employee_id=1).first(),
             message_id=1,
             message=message,
             is_sent_from_customer=(0 if customer else 1),
@@ -97,7 +97,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message_list = [
             {
                 "username": customer.email if message.is_sent_from_customer == 0 else self.user.username,
-                "sender": customer.customer_name if message.is_sent_from_customer == 0 else employee.employee_name, 
+                "sender": customer.customer_name if message.is_sent_from_customer == 0 else (employee.employee_name if employee else ""), 
                 "message": message.message, 
                 "time": message.sent_time.strftime('%Y-%m-%d %H:%M'),
                 "is_sent_customer": message.is_sent_from_customer

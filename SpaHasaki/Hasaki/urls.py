@@ -16,6 +16,7 @@ urlpatterns = [
     path('customers/delete/<int:customer_id>', views.delete_customer, name='delete-customer'),
     path('customers/edit/<int:id>', views.edit_customer, name='edit-customer'),
     path('messenger', views.messenger, name='messenger'),
+    path('chat', views.customer_chat, name='chat'),
     path('support', views.support, name='support'),
     path('register-work-shifts', views.register_work_shifts, name='register-work_shifts'),
     path('work-shifts', views.work_shifts, name='work-shifts'),
