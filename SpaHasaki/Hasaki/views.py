@@ -1,16 +1,17 @@
 import calendar
+import json
+import random
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, authenticate
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from twilio.rest import Client
 from django.core.mail import send_mail
-import random
+from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime as dt, timedelta, date
-from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger, Account
+from .models import Customer, Appointment, Service, Employee, Feedback, WorkShifts, Messenger, Account, FeedbackDetail
 from .helpers import get_appointment, read_data
 from .enums import AppointmentStatusType, DeletedType, RoleType
 
@@ -165,18 +166,22 @@ def login(request):
     
 @csrf_protect
 def appointment_booking(request):
+    customer_id = request.session.get('customer')
+    if not customer_id:
+        return redirect('/login')
+    
     services = Service.objects.all()
+    customer = Customer.objects.filter(customer_id=customer_id).first()
+
     if request.method == "GET":
         context = {
             'isSuccess': False,
-            'services': services
+            'services': services,
+            'customer': customer
         }
         return render(request,'../templates/appointment_booking.html', {'context': context})
     
     # Check validity of fields on form
-    customer_name = request.POST.get('name')
-    phone = request.POST.get('phone')
-    email = request.POST.get('email')
     note = request.POST.get('note')
     service = request.POST.get('service')
     appointment_date = request.POST.get('appointment_date')
@@ -184,12 +189,13 @@ def appointment_booking(request):
     service_time = request.POST.get('service_time')
     end_time = None
 
-    if (customer_name == '') or (phone == '') or (email == '') or (int(service) == -1) or \
+    if (int(service) == -1) or \
         (appointment_date == '') or (start_time == ''):
         messages.error(request,'Vui lòng điền đủ thông tin!')
         context = {
             'isSuccess': False,
-            'services': services
+            'services': services,
+            'customer': customer
         }
         return render(request, '../templates/appointment_booking.html', {'context': context})
     
@@ -210,16 +216,6 @@ def appointment_booking(request):
     if available_employees.count() == 5:
         messages.error(request, "Hiện tại đã full nhân viên cho khung giờ này! Vui lòng chọn khung giờ khác!")
         return redirect(request.path)
-    
-    customer = Customer.objects.filter(phone_number=phone).first()
-    new_customer = None
-    if not customer:
-        new_customer = Customer(
-            customer_name = customer_name,
-            phone_number = phone,
-            email = email
-        )
-        new_customer.save()
 
     service_obj = Service.objects.filter(service_id=service).first()
     minutes = (float(service_time) * 60) if service_time else 30
@@ -228,7 +224,7 @@ def appointment_booking(request):
     employee = Employee.objects.get(employee_id=employee_id)
 
     appointment = Appointment(
-        customer = customer if customer else new_customer,
+        customer = customer,
         service = service_obj,
         employee = employee,
         appointment_date = appointment_date,
@@ -241,9 +237,9 @@ def appointment_booking(request):
 
     context = {
         'isSuccess': True,
-        'customer_name': customer_name,
-        'phone': phone,
-        'email': email,
+        'customer_name': customer.customer_name,
+        'phone': customer.phone_number,
+        'email': customer.email,
         'service': service_obj.service_name if service_obj else "Không dịch vụ",
         'appointment_date': appointment_date,
         'note': note,
@@ -257,41 +253,35 @@ def appointment_booking(request):
 @csrf_protect
 def support(request):
     services = Service.objects.all().values()
+    customer_id = request.session.get('customer')
+    if not customer_id:
+        return redirect('/login')
+    
+    customer = Customer.objects.filter(customer_id=int(customer_id)).first()
 
     if request.method == 'GET':
         context = {
             'isShowModal': False,
-            'services': services
+            'services': services,
+            'customer': customer
         }
         return render(request, '../templates/request.html', {'context': context})
     
-    customer_name = request.POST.get('customer_name')
-    phone_number = request.POST.get('phone_number')
-    email = request.POST.get('email')
     service = request.POST.get('service')
     content = request.POST.get('request_content')
-
     try:
-        customer = Customer.objects.get(phone_number=phone_number)
-        new_customer = None
-        if not customer:
-            new_customer = Customer(
-                customer_name = customer_name,
-                phone_number = phone_number,
-                email = email
-            )
-            new_customer.save()
-
         feedback = Feedback(
-            customer=customer if customer else new_customer,
-            service=Service.objects.get(service_id=service),
-            request_content=content
+            customer=customer,
+            service=Service.objects.get(service_id=int(service)),
+            request_content=content,
+            request_date=dt.strptime(dt.today().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
         )
         feedback.save()
 
         context = {
-            'customer': customer_name,
-            'phone': phone_number,
+            'customer': customer,
+            'customer_name': customer.customer_name,
+            'phone': customer.phone_number,
             'service': Service.objects.get(service_id=service),
             'content': content,
             'request_date': feedback.request_date,
@@ -300,13 +290,15 @@ def support(request):
         }
     except Exception as e:
         context = {
-            'customer': customer_name,
-            'phone': phone_number,
+            'customer': customer,
+            'customer_name': customer.customer_name,
+            'phone': customer.phone_number,
             'service': Service.objects.get(service_id=service),
             'content': content,
             'isShowModal': False,
             'services': services
         }
+        print(e)
     return render(request,'../templates/request.html', {'context': context})
 
 @csrf_protect
@@ -581,27 +573,46 @@ def schedules(request):
         return render(request,'../templates/appointments.html', {"context": context})
 
 def customers(request):
-    if request.method == 'GET':
-        if not request.session.get('employee'):
-            return redirect('/login')
+    # Redirect to login if the employee is not in session
+    if not request.session.get('employee'):
+        return redirect('/login')
     
-        customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).values().order_by('customer_id')
+    # Handle GET request
+    if request.method == 'GET':
+        # Get the search parameter from query parameters
+        search = request.GET.get('search', '')
+
+        # Filter customers based on whether they are deleted or not
+        customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).order_by('customer_id')
+
+        # If search parameter exists, filter based on it
+        if search:
+            customers = customers.filter(
+                Q(customer_name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(phone_number__icontains=search[1:])
+            )
+
+        # Set up pagination (12 items per page)
         paginator = Paginator(customers, 12)
-        page_number = request.GET.get('page')
-        if not page_number:
-            page_number = 1
+        page_number = request.GET.get('page', 1)
         
+        # Fetch employee data from the session
         employee_id = request.session.get('employee')
         employee = None
         if employee_id:
             employee = Employee.objects.get(employee_id=int(employee_id))
 
+        # Get the paginated customers
         customers_per_page = paginator.get_page(page_number)
+        
+        # Pass data to the template
         context = {
             'customers': customers_per_page,
-            'employee': employee
+            'employee': employee,
+            'search': search,  # Include the search term in the context
         }
-        return render(request,'../templates/customers.html', {'context': context})
+        return render(request, 'customers.html', context)
 
 def cancel_appointment(request, appointment_id):
     if request.method == 'POST':
@@ -724,23 +735,136 @@ def feedbacks(request):
             'info': info,        
         }
         return render(request, '../templates/feedback.html', {'context': context})
-    
+
+@csrf_protect
 def feedback_detail(request, feedback_id):
     employee_id = request.session.get('employee')
-    if request.method == 'GET':
-        if not employee_id:
+    if not employee_id:
             return redirect('/login')
-        
-    if request.method == 'GET':
-        feedback = Feedback.objects.get(request_id=feedback_id)
-        employee = Employee.objects.get(employee_id=employee_id)
-        customer = Customer.objects.get(customer_id=feedback.customer_id)
-        service = Service.objects.get(service_id=feedback.service_id)
+    
+    feedback = Feedback.objects.get(request_id=feedback_id)
+    employee = Employee.objects.get(employee_id=employee_id)
+    customer = Customer.objects.get(customer_id=feedback.customer_id)
+    service = Service.objects.get(service_id=feedback.service_id)
+    feedback_detail = FeedbackDetail.objects.filter(feedback_id=feedback.request_id).values()
 
+    if request.method == 'GET':
         context = {
             'feedback': feedback,
             'customer': customer,
             'employee': employee,
             'service': service,
+            'detail': feedback_detail
         }
         return render(request, '../templates/feedback_detail.html', {'context': context})
+    
+    data = json.loads(request.body)
+    reply_content = data.get('reply_content')
+    reply_time = data.get('reply_time')
+    status = data.get('status')
+    prioritize = data.get('prioritize')
+
+    if reply_content and reply_time:
+        detail = FeedbackDetail(
+            feedback_id=feedback.request_id,
+            reply_content=reply_content,
+            reply_time=dt.strptime(reply_time, "%Y-%m-%d %H:%M")
+        )
+        detail.save()
+
+    if feedback:
+        if status and int(status) != -1:
+            feedback.status = int(status)
+        if prioritize and int(prioritize) != -1:
+            feedback.prioritize = int(prioritize)
+        feedback.save()
+        messages.success(request, 'Cập nhật phản hồi thành công!')
+    else:
+        messages.error(request, 'Cập nhật phản hồi thất bại! Vui lòng kiểm tra lại thông tin!')
+        return redirect(request.path)
+
+    feedback = Feedback.objects.get(request_id=feedback_id)
+    employee = Employee.objects.get(employee_id=employee_id)
+    customer = Customer.objects.get(customer_id=feedback.customer_id)
+    service = Service.objects.get(service_id=feedback.service_id)
+    feedback_detail = FeedbackDetail.objects.filter(feedback_id=feedback.request_id).values()
+
+    context = {
+            'feedback': feedback,
+            'customer': customer,
+            'employee': employee,
+            'service': service,
+            'detail': feedback_detail
+    }
+    return render(request, '../templates/feedback_detail.html', {'context': context})
+
+def customer_feedback(request):
+    customer_id = request.session.get('customer')
+    if not customer_id:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        pass
+    
+    customer = Customer.objects.filter(customer_id=customer_id).first()
+    feedbacks = Feedback.objects.filter(customer_id=customer_id)
+    data = []
+    
+    for feedback in feedbacks:
+        info = {
+            'customer': customer,
+            'feedback': feedback,
+            'service': Service.objects.filter(service_id=feedback.service_id).first()
+        }
+        data.append(info)
+
+    context = {
+        'customer': customer,
+        'feedbacks': data
+    }
+    return render(request, '../templates/customer_feedback.html',{'context': context})
+
+def customer_feedback_detail(request, feedback_id):
+    customer_id = request.session.get('customer')
+    if not customer_id:
+        return redirect('/login')
+    
+    customer = Customer.objects.filter(customer_id=customer_id).first()
+    feedbacks = Feedback.objects.filter(customer_id=customer_id)
+    feedback = Feedback.objects.filter(request_id=feedback_id).first()
+    service = Service.objects.filter(service_id=feedback.service_id).first()
+    feedback_detail = FeedbackDetail.objects.filter(feedback_id=feedback_id)
+    data = []
+    
+    for fb in feedbacks:
+        info = {
+            'customer': customer,
+            'feedback': fb,
+            'service': Service.objects.filter(service_id=fb.service_id).first()
+        }
+        data.append(info)
+
+    if request.method == 'GET':
+        context = {
+            'customer': customer,
+            'feedbacks': data,
+            'feedback': feedback,
+            'service': service,
+            'detail': feedback_detail
+        }
+        return render(request, '../templates/customer_feedback_detail.html', {'context': context})
+    
+    data = json.loads(request.body)
+    reply_content = data.get('reply_content')
+    reply_time = data.get('reply_time')
+
+    if reply_content and reply_time:
+        detail = FeedbackDetail(
+            feedback_id=feedback.request_id,
+            reply_content=reply_content,
+            reply_time=dt.strptime(reply_time, "%Y-%m-%d %H:%M"),
+            reply_to_customer = 0
+        )
+        detail.save()
+    
+    return redirect(request.path)

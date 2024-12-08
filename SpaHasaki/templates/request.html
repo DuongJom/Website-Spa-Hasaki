@@ -4,6 +4,7 @@
 {% block home_title %}
     Support
 {% endblock %} 
+{% block customer_name %}{{context.customer.customer_name}}{% endblock %}
 
 {% block home_content %}
 <main class="container mx-auto my-8 w-1/3">
@@ -19,8 +20,8 @@
                 Họ và tên
                 <span class="text-red-500">*</span>
             </label>
-            <input type="text" id="full_name" name="customer_name" placeholder="Nguyễn Văn A" 
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+            <input type="text" id="full_name" name="customer_name" placeholder="Nguyễn Văn A" value="{{context.customer.customer_name}}"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" readonly>
         </div>
 
         <!-- Phone Number Field -->
@@ -29,7 +30,7 @@
                 Số điện thoại
                 <span class="text-red-500">*</span>
             </label>
-            <input type="tel" id="phone" name="phone_number" placeholder="0905000000" required
+            <input type="tel" id="phone" name="phone_number" placeholder="0905000000" value="{{context.customer.phone_number|phoneformat:"10"}}" readonly
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
         </div>
 
@@ -87,7 +88,7 @@
           <div class="space-y-2">
             <p class="grid grid-cols-2">
               <strong>Họ và tên:</strong>
-              {{context.customer}}
+              {{context.customer_name}}
             </p>
             <p class="grid grid-cols-2">
               <strong>Số điện thoại:</strong>
@@ -114,23 +115,23 @@
 <!-- Script to handle modal open/close -->
 <script>
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const confirmationModal = document.getElementById('confirmationModal');
+      const confirmationModal = document.getElementById('confirmationModal');
 
-    // Function to open modal
-    openModalBtn.addEventListener('click', () => {
-      confirmationModal.classList.remove('hidden');
-    });
+      // Function to open modal
+      openModalBtn.addEventListener('click', () => {
+        confirmationModal.classList.remove('hidden');
+      });
 
-    // Function to close modal
-    closeModalBtn.addEventListener('click', () => {
-      confirmationModal.classList.add('hidden');
-    });
-
-    // Close modal if user clicks outside the modal content
-    window.addEventListener('click', (e) => {
-      if (e.target === confirmationModal) {
+      // Function to close modal
+      closeModalBtn.addEventListener('click', () => {
         confirmationModal.classList.add('hidden');
-      }
-    });
+      });
+
+      // Close modal if user clicks outside the modal content
+      window.addEventListener('click', (e) => {
+        if (e.target === confirmationModal) {
+          confirmationModal.classList.add('hidden');
+        }
+      });
 </script>
 {% endblock %}

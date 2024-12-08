@@ -1,0 +1,175 @@
+{% extends "customer_feedback.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block feedback_detail %}
+<div id="detail_content" class="flex flex-row w-full">
+    <div class="w-full">
+        <div class="flex flex-col border border-gray-200">
+            <div class="grid grid-cols-3">
+                <div class="text-gray-700">
+                    <strong>Khách hàng:</strong> 
+                    {{context.customer.customer_name}}
+                </div>
+                <div class="text-gray-700">
+                    <strong>Số điện thoại:</strong>
+                     {{context.customer.phone_number|phoneformat:"10"}}
+                </div>
+                <div class="text-gray-700">
+                    <strong>Độ ưu tiên:</strong> 
+                    {% if context.feedback.prioritize == 0 %}
+                        <span class="text-yellow-700 border bg-yellow-300 rounded-lg p-1 w-20 text-center">Thấp</span>
+                    {% elif context.feedback.prioritize == 1 %}
+                        <span class="text-sky-700 border bg-sky-300 rounded-lg p-1 w-20 text-center">Trung bình</span>
+                    {% else %}
+                        <span class="text-red-700 border bg-red-300 rounded-lg p-1 w-20 text-center">Cao</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="grid grid-cols-3">
+                <div class="text-gray-700">
+                    <strong>ID yêu cầu:</strong> 
+                    {{context.feedback.request_id}}
+                </div>
+                <div class="text-gray-700">
+                    <strong>Ngày tạo:</strong> 
+                    {{context.feedback.request_date|date:'Y-m-d H:i A'}}
+                </div>
+                <div class="text-gray-700">
+                    <strong>Tiêu đề yêu cầu:</strong> 
+                    {{context.service.service_name}}
+                </div>
+            </div>
+        </div>
+        <!-- Request Details -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-5 mt-5">
+            <p class="text-gray-700 mb-3"><strong>Nội dung yêu cầu:</strong></p>
+            <p class="text-gray-500 mb-3">{{context.feedback.request_content}}</p>
+            <div class="flex space-x-4 flex-row items-center">
+                Trạng thái hiện tại:
+                <button class="ml-2 px-4 py-2 rounded-lg 
+                    {% if context.feedback.status == 1 %} bg-green-500 text-white {% else %} bg-gray-300 text-gray-700 {% endif %}">
+                    Đang xử lý
+                </button>
+                <button class="px-4 py-2 rounded-lg 
+                    {% if context.feedback.status == 2 %} bg-green-500 text-white {% else %} bg-gray-300 text-gray-700 {% endif %}">
+                    Đã xử lý
+                </button>
+                <button class="px-4 py-2 rounded-lg 
+                    {% if context.feedback.status == 0 %} bg-green-500 text-white {% else %} bg-gray-300 text-gray-700 {% endif %}">
+                    Hoãn lại
+                </button>
+            </div>
+        </div>
+    
+        <!-- User Replies -->
+        <div id="detail" class="flex flex-col bg-white p-6 rounded-lg shadow-lg mb-5 max-h-80 overflow-y-auto">
+            {% for feedback_detail in context.detail %}
+                {% if feedback_detail.reply_to_customer == 1 %}
+                    <!--Align customer's reply to left side-->
+                    <div class="flex mt-2 flex-row rounded-lg space-x-2">
+                        <div class="w-2 bg-sky-600 rounded-s-lg flex flex-row"></div>
+                        <div class="flex space-x-4 flex-col">
+                            <p class="text-sky-500">
+                                <strong>Spa Hasaki</strong>
+                                <span class="text-gray-400 text-sm ml-2">{{feedback_detail.reply_time|date:"Y-m-d H:i A"}}</span>
+                            </p>
+                            <p class="text-gray-500 text-wrap max-w-80">{{feedback_detail.reply_content}}</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <!--Align employee's reply to right side-->
+                    <div class="flex mt-2 flex-row-reverse rounded-lg space-x-2">
+                        <div class="w-2 bg-green-600 rounded-e-lg flex flex-row"></div>
+                        <div class="flex space-x-4 flex-col">
+                            <p class="text-green-500 flex flex-row justify-end mr-2">
+                                <strong>{{context.customer.customer_name}}</strong>
+                                <span class="text-gray-400 text-sm ml-2">{{feedback_detail.reply_time|date:"Y-m-d H:i A"}}</span>
+                            </p>
+                            <p class="text-gray-500 text-wrap max-w-80">{{feedback_detail.reply_content}}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <div class="flex flex-row justify-center font-bold">No replication.</div>
+            {% endfor %}
+        </div>
+        <!-- Input Section -->
+        <div class="py-1 bg-transparent border-t flex flex-row justify-center items-center space-x-2 w-8/12 absolute bottom-0">
+            <input id="reply_input" type="text" placeholder="Type your reply here..." 
+                class="flex-1 p-2 border rounded-lg">
+            <button id="send_reply" class="p-2 bg-transparent text-white rounded-full">
+                <img src="{% static 'img/send-message.png' %}" alt="send message" class="bg-transparent w-5 h-5">
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('reply_input').addEventListener('keyup', function(e){
+        if(e.keyCode === 13){
+            document.getElementById('send_reply').click();
+        }
+    })
+
+    document.getElementById('send_reply').addEventListener('click', function(e){
+        const reply_input = document.getElementById('reply_input');
+        const detail = document.getElementById('detail');
+        const reply_content = reply_input.value;
+        const now = new Date();
+        const year = now.getFullYear();                             // Get the full year (e.g., 2024)
+        const month = String(now.getMonth() + 1).padStart(2, '0');  // Get the month (0-11, so add 1, and pad to 2 digits)
+        const day = String(now.getDate()).padStart(2, '0');         // Get the day of the month (1-31, pad to 2 digits)
+        const hours = String(now.getHours()).padStart(2, '0');      // Get the hours (0-23, pad to 2 digits)
+        const minutes = String(now.getMinutes()).padStart(2, '0');  // Get the minutes (0-59, pad to 2 digits)
+        // Format the result as "YYYY-MM-DD HH:MM"
+        const time = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+        fetch('/customer/feedback/detail/{{context.feedback.request_id}}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken() // If CSRF protection is enabled
+            },
+            body: JSON.stringify({ 
+                reply_content: reply_content,
+                reply_time: time
+            })
+        })
+
+        var div = document.createElement("div");
+        div.className = "flex flex-row justify-end";
+        div.innerHTML = `
+            <div class="flex mt-2 flex-row-reverse rounded-lg space-x-2">
+                <div class="w-2 bg-green-600 rounded-e-lg flex flex-row"></div>
+                <div class="flex space-x-4 flex-col">
+                    <p class="text-green-500 flex flex-row justify-end mr-2">
+                        <strong>{{context.customer.customer_name}}</strong>
+                        <span class="text-gray-400 text-sm ml-2">${time}</span>
+                    </p>
+                    <p class="text-gray-500 text-wrap max-w-80">${reply_content}</p>
+                </div>
+            </div>
+        `;
+        detail.appendChild(div);
+        reply_input.value = "";
+        // Scroll to the bottom of the chat container
+        detail.scrollTop = detail.scrollHeight;
+    })
+
+    // Helper function to get CSRF token (Django uses CSRF protection)
+    function getCSRFToken() {
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
