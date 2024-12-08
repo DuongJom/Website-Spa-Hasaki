@@ -588,6 +588,7 @@ def customers(request):
         # If search parameter exists, filter based on it
         if search:
             customers = customers.filter(
+                Q(customer_id=int(search)) |
                 Q(customer_name__icontains=search) |
                 Q(email__icontains=search) |
                 Q(phone_number__icontains=search[1:])
