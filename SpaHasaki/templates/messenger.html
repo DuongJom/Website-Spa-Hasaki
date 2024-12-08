@@ -158,7 +158,7 @@
                         <div class="w-10 h-10 rounded-full bg-gray-300">
                             <img src="{% static 'img/logo.png' %}" class="rounded-full w-10 h-10">    
                         </div>
-                    </div>
+                    </div> 
                 `;
                 }
                 
@@ -225,19 +225,6 @@
 
         // Reconnect WebSocket with the new customer ID
         connectWebSocket(customerId);
-
-        // // Fetch the chat messages for the selected customer
-        // fetch(`/messenger?customer_id=${customerId}`)
-        //     .then((res) => {
-        //         if (!res.ok) {
-        //             throw new Error('Network response was not ok');
-        //         }
-        //         return res.text();
-        //     })
-        //     .then((html) => {
-        //         document.getElementById('content').innerHTML = html;
-        //     })
-        //     .catch((err) => console.log(err));
     }
 
 </script>

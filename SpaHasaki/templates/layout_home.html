@@ -30,6 +30,12 @@
                 <span>Messenger</span>
                 <img src="{% static 'img/messenger.png' %}" alt="messenger icon" class="w-5 h-5">
             </a>
+            <a href="/customer/feedback-list" 
+                class="home-navbar-item
+                    {% if request.path == '/customer/feedback-list' %} home-navbar-item-highlight {% endif %}">
+                <span>Phản hồi</span>
+                <img src="{% static 'img/business.png' %}" alt="messenger icon" class="w-5 h-5"> 
+            </a>
             <a href="/logout" 
                 class="home-navbar-item
                     {% if request.path == '/logout' %} home-navbar-item-highlight {% endif %}">

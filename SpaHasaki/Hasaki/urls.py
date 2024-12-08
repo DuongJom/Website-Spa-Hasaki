@@ -23,4 +23,6 @@ urlpatterns = [
     path('work-shifts', views.work_shifts, name='work-shifts'),
     path('list-feedback', views.feedbacks, name='list-feedback'),
     path('feedback/<int:feedback_id>', views.feedback_detail, name='feedback-detail'),
+    path('customer/feedback-list', views.customer_feedback, name='customer-feedback'),
+    path('customer/feedback/detail/<int:feedback_id>', views.customer_feedback_detail, name='customer-feedback-detail'),
 ]

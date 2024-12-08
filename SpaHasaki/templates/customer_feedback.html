@@ -1,0 +1,35 @@
+{% extends "layout_home.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block home_title %} Danh sách phản hồi {% endblock %}
+
+{% block customer_name %}{{context.customer.customer_name}}{% endblock %}
+
+{% block home_content %}
+<!-- Main Content -->
+<div class="w-full py-5 px-4 flex flex-row space-x-5">
+    <div class="flex flex-col w-1/5">
+        <ul class="space-y-4">
+            {% for data in context.feedbacks %}
+            <a href="/customer/feedback/detail/{{data.feedback.request_id}}"
+                class="bg-transparent rounded p-2 flex items-center hover:bg-green-400">
+                <!-- Button inside the li -->
+                <button type="submit" class="w-auto bg-transparent flex flex-row">
+                    <span class="w-8 h-8 rounded-full bg-transparent mr-2">
+                        <img src="{% static 'img/logo.png' %}" alt="avatar image" class="rounded-full w-8 h-8">
+                    </span>
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-left truncate">{{ data.service.service_name }}</h4>
+                        <p class="text-xs text-gray-500 justify-start text-left truncate max-w-40">{{ data.feedback.request_content }}</p>
+                    </div>
+                    <input type="hidden" name="feedback_id" value="{{ data.feedback.request_id }}">
+                </button>
+            </a>
+            {% empty %}
+                <div class="flex justify-center">No feedback.</div>
+            {% endfor %}
+        </ul>
+    </div>
+    {% block feedback_detail %}{% endblock %}
+</div>
+{% endblock %}

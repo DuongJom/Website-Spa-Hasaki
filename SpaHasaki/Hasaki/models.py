@@ -6,7 +6,7 @@ class Account(models.Model):
     username = models.CharField(max_length=255, null=False)
     password = models.CharField(max_length=255, null=False)
     role = models.IntegerField(null=False, default=0)
-    is_delete = models.IntegerField(null=False, default=0)
+    is_delete = models.IntegerField(null=False, default=0)                     
 
 class Customer(models.Model):
     customer_id = models.AutoField(primary_key=True)
@@ -51,6 +51,13 @@ class Feedback(models.Model):
     request_content = models.TextField(null=False)
     request_date = models.DateTimeField(null=False)
     is_delete = models.IntegerField(null=False, default=0)
+
+class FeedbackDetail(models.Model):
+    detail_id = models.AutoField(primary_key=True)
+    feedback_id = models.IntegerField(null=True)
+    reply_content = models.TextField(null=False)
+    reply_time = models.DateTimeField(null=False)
+    reply_to_customer = models.IntegerField(null=False, default=1)
 
 class WorkShifts(models.Model):
     shifts_id = models.AutoField(primary_key=True)
