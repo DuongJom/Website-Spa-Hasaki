@@ -612,7 +612,7 @@ def customers(request):
             'employee': employee,
             'search': search,  # Include the search term in the context
         }
-        return render(request, 'customers.html', {'context':context})
+        return render(request, 'customers.html', context)
 
 def cancel_appointment(request, appointment_id):
     if request.method == 'POST':
