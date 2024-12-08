@@ -612,7 +612,7 @@ def customers(request):
             'employee': employee,
             'search': search,  # Include the search term in the context
         }
-        return render(request, 'customers.html', context)
+        return render(request, 'customers.html', {'context':context})
 
 def cancel_appointment(request, appointment_id):
     if request.method == 'POST':
@@ -668,9 +668,9 @@ def delete_customer(request, customer_id):
             return redirect("/customers")
 
 @csrf_protect
-def edit_customer(request, customer_id):
+def edit_customer(request, id):
     if request.method == 'POST':
-        customer = Customer.objects.get(customer_id=customer_id)
+        customer = Customer.objects.get(customer_id=id)
         if customer:
             customer.customer_name = request.POST.get('customer_name')
             customer.email = request.POST.get('email')

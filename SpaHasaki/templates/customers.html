@@ -8,7 +8,7 @@
 <div class="flex-1 p-6 bg-white w-full">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-green-700">Danh sách khách hàng</h1>
-        {% include "header.html" with employee=employee %}
+        {% include "header.html" with employee=context.employee %}
     </div>
 
     <!-- Search -->
@@ -34,7 +34,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for customer in customers %}
+                {% for customer in context.customers %}
                     <tr class="hover:bg-green-300 hover:text-green-900 even:bg-gray-100 odd:bg-white">
                         <td class="bg-gray-300 text-black text-center px-4 py-2 border-2 w-14">{{customer.customer_id|stringformat:"03d"}}</td>
                         <td class="text-left px-2 py-2 border-2 w-1/4">{{customer.customer_name}}</td>
@@ -60,12 +60,12 @@
         </table>
     </div>
 
-    {% if customers|length > 0 %}
+    {% if context.customers|length > 0 %}
     <!-- Pagination controls -->
     <div class="absolute mt-4 right-5">
         <nav aria-label="Page navigation">
             <ul class="inline-flex items-center space-x-1">
-                {% if customers.has_previous %}
+                {% if context.customers.has_previous %}
                 <li>
                     <a href="?page={{ context.customers.previous_page_number }}" 
                         class="px-3 py-2 bg-gray-200 rounded">
@@ -77,14 +77,14 @@
                 <li>
                     <span class="px-3 py-2">
                         <input type="text" id="current_page" class="w-8 h-5 border-2 border-gray-400 text-black text-center" 
-                            value="{{ customers.number }}"/>
+                            value="{{ context.customers.number }}"/>
                         /
                         <input type="text" id="total_pages" class="w-8 h-5 text-black text-center bg-transparent" disabled 
-                            value="{{ customers.paginator.num_pages }}"/>
+                            value="{{ context.customers.paginator.num_pages }}"/>
                     </span>
                 </li>
 
-                {% if customers.has_next %}
+                {% if context.customers.has_next %}
                 <li>
                     <a href="?page={{ context.customers.next_page_number }}" class="px-3 py-2 bg-gray-200 rounded">
                         Next &gt;
