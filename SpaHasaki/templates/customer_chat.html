@@ -77,9 +77,10 @@
             messageContainer.innerHTML = "";
         }
 
+        const customer_id = "{{context.customer.customer_id}}";
         // Dynamically create WebSocket URL based on customer ID
         const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
-        const wsUrl = `${wsScheme}${window.location.host}/messenger/1/`;
+        const wsUrl = `${wsScheme}${window.location.host}/messenger/${customer_id}/`;
 
         // Create new WebSocket connection
         chatSocket = new WebSocket(wsUrl);

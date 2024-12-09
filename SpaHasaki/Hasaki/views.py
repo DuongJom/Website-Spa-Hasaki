@@ -155,7 +155,7 @@ def login(request):
                 request.session['customer'] = customer.customer_id
             return redirect("/home")
         else:
-            employee = Employee.objects.get(email=account.username)
+            employee = Employee.objects.filter(email=account.username).first()
             if employee:
                 request.session['employee'] = employee.employee_id
             return redirect("/schedules")
@@ -163,7 +163,46 @@ def login(request):
         
     messages.error(request, 'Tài khoản không tồn tại!')
     return redirect(request.path)
+
+@csrf_protect
+def signup(request):
+    if request.method == 'GET':
+        return render(request, '../templates/signup.html')
     
+    full_name = request.POST.get('fullname')
+    email = request.POST.get('email')
+    phone = request.POST.get('phone')
+    password = request.POST.get('password')
+    confirm_password = request.POST.get('confirm_password')
+
+    if password != confirm_password:
+        messages.error(request, 'Xác nhận mật khẩu không chính xác!')
+        return redirect(request.path)
+
+    if len(phone) < 9 or len(phone) > 11:
+        messages.error(request, 'Số điện thoại không hợp lệ!')
+        return redirect(request.path)
+    
+    try:
+        customer = Customer(
+            customer_name=full_name,
+            email=email,
+            phone_number=phone
+        )
+        customer.save()
+        account = Account(
+            username=email,
+            password=password,
+            role=0
+        )
+        account.save()
+
+        User.objects.create_superuser(username=email, email=email, password=password)
+        messages.success(request, 'Đăng ký tài khoản thành công!')
+    except Exception as e:
+        messages.error(request, 'Đăng ký tìa khoản thất bại!')
+        return redirect(request.path)
+    return redirect('/login')
 @csrf_protect
 def appointment_booking(request):
     customer_id = request.session.get('customer')
@@ -534,6 +573,7 @@ def reset_password(request):
     messages.success(request, 'Cập nhật mật khẩu thành công!')
     return redirect('/')
 
+@csrf_protect
 def schedules(request):
     if not request.session.get('employee'):
         return redirect('/login')
@@ -571,6 +611,18 @@ def schedules(request):
             'employee': employee
         }
         return render(request,'../templates/appointments.html', {"context": context})
+    
+    data = json.loads(request.body)
+    status = data.get('status')
+    appointment_id = data.get('appointment_id')
+    appointment = Appointment.objects.filter(appointment_id=appointment_id).first()
+    if appointment:
+        appointment.status = int(status)
+        appointment.save()
+        messages.success(request, 'Cập nhật trạng thái thành công!')
+    else:
+        messages.error(request, 'Lịch hẹn không tồn tại')
+    return redirect(request.path)
 
 def customers(request):
     # Redirect to login if the employee is not in session
@@ -581,6 +633,7 @@ def customers(request):
     if request.method == 'GET':
         # Get the search parameter from query parameters
         search = request.GET.get('search', '')
+        sort = request.GET.get('sort', 0)
 
         # Filter customers based on whether they are deleted or not
         customers = Customer.objects.filter(is_delete=DeletedType.AVAILABLE.value).order_by('customer_id')
@@ -588,11 +641,15 @@ def customers(request):
         # If search parameter exists, filter based on it
         if search:
             customers = customers.filter(
-                Q(customer_id=int(search)) |
                 Q(customer_name__icontains=search) |
                 Q(email__icontains=search) |
                 Q(phone_number__icontains=search[1:])
             )
+
+        if int(sort) == 0:
+            customers = customers.order_by('-created_date')
+        elif int(sort) == 1:
+            customers = customers.order_by('customer_name')
 
         # Set up pagination (12 items per page)
         paginator = Paginator(customers, 12)
@@ -612,6 +669,7 @@ def customers(request):
             'customers': customers_per_page,
             'employee': employee,
             'search': search,  # Include the search term in the context
+            'sort': int(sort)
         }
         return render(request, 'customers.html', context)
 
@@ -705,9 +763,13 @@ def messenger(request):
         return render(request, '../templates/messenger.html', {'context': context})
 
 def customer_chat(request):
+    customer_id = request.session.get('customer')
+    if not customer_id:
+        return redirect('/login')
+        
     if request.method == 'GET':
         context = {
-            'customer': Customer.objects.filter(email=request.user.username).first()
+            'customer': Customer.objects.filter(customer_id=customer_id).first()
         }
         return render(request, '../templates/customer_chat.html', {'context': context})
     
