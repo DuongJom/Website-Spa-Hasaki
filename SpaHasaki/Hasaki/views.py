@@ -779,11 +779,29 @@ def feedbacks(request):
         if not employee_id:
             return redirect('/login')
         
+        search = request.GET.get('search')
+        status = request.GET.get('status')
+        prioritize = request.GET.get('prioritize')
+        date_filter = request.GET.get('date_filter')
+
         employee = Employee.objects.get(employee_id=employee_id)
-        feedbacks = Feedback.objects.all().values()
+        feedbacks = Feedback.objects.all()
+
+        if search and len(search.strip()) != 0:
+            feedbacks = feedbacks.filter(request_content__icontains=search)
+
+        if status and int(status) != -1:
+            feedbacks = feedbacks.filter(status=int(status))
+
+        if prioritize and int(prioritize) != -1:
+            feedbacks = feedbacks.filter(prioritize=int(prioritize))
+        
+        if date_filter:
+            feedbacks = feedbacks.filter(request_date=dt.strptime(date_filter,'%Y-%m-%d %H:%M:%S'))
+
         info = []
 
-        for feedback in feedbacks:
+        for feedback in feedbacks.values():
             customer = Customer.objects.filter(customer_id=feedback['customer_id']).values().first()
             service = Service.objects.filter(service_id=feedback['service_id']).values().first()
             data = {
@@ -795,7 +813,11 @@ def feedbacks(request):
             
         context = {
             'employee': employee,
-            'info': info,        
+            'info': info,
+            'search': search if search else "",
+            'status': int(status) if status else 0,
+            'priority': int(prioritize) if prioritize else 0,
+            'date_filter': date_filter if date_filter else dt.today(),     
         }
         return render(request, '../templates/feedback.html', {'context': context})
 
