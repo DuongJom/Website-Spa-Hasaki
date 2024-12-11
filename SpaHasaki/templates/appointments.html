@@ -155,8 +155,6 @@
                                         {% if info.appointment.status != 2 %}
                                         <div class="flex flex-col w-1/4 items-center justify-center ml-5 space-y-2">
                                             <select name="status{{info.appointment.appointment_id}}" id="status{{info.appointment.appointment_id}}" class="border border-gray-200 rounded">
-                                                <option value="0" {% if info.appointment.status == 0 %} selected {% endif %}>Đã hủy</option>
-                                                <option value="1" {% if info.appointment.status == 1 %} selected {% endif %}>Chưa hoàn thành</option>
                                                 <option value="2" {% if info.appointment.status == 2 %} selected {% endif %}>Đã hoàn thành</option>
                                             </select>
                                             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
