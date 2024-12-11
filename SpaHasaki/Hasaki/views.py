@@ -674,6 +674,7 @@ def customers(request):
         }
         return render(request, 'customers.html', context)
 
+@csrf_protect
 def cancel_appointment(request, appointment_id):
     if request.method == 'POST':
         previous_url = request.META.get('HTTP_REFERER')
