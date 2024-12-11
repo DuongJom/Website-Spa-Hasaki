@@ -39,7 +39,7 @@
           <option value="1" {% if context.priority == 1 %} selected {% endif %}>Trung bình</option>
           <option value="2" {% if context.priority == 2 %} selected {% endif %}>Cao</option>
         </select>
-        <input type="datetime" name="date_filter" value="{{context.date_filter|date:"Y-m-d H:i:s"}}"
+        <input type="date" name="date_filter" value="{{context.date_filter|date:'Y-m-d'}}"
           class="border border-gray-200 rounded-lg p-1 text-center">
       </div>
       <button type="submit" class="bg-sky-300 text-black p-2 rounded-lg hover:bg-sky-500 space-x-1 

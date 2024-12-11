@@ -313,7 +313,9 @@ def support(request):
             customer=customer,
             service=Service.objects.get(service_id=int(service)),
             request_content=content,
-            request_date=dt.strptime(dt.today().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+            request_date=dt.strptime(dt.today().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S"),
+            status=1,
+            prioritize=1
         )
         feedback.save()
 
@@ -337,7 +339,6 @@ def support(request):
             'isShowModal': False,
             'services': services
         }
-        print(e)
     return render(request,'../templates/request.html', {'context': context})
 
 @csrf_protect
@@ -785,10 +786,10 @@ def feedbacks(request):
         date_filter = request.GET.get('date_filter')
 
         employee = Employee.objects.get(employee_id=employee_id)
-        feedbacks = Feedback.objects.all()
+        feedbacks = Feedback.objects.all().order_by('-request_date')
 
         if search and len(search.strip()) != 0:
-            feedbacks = feedbacks.filter(request_content__icontains=search)
+            feedbacks = feedbacks.filter(Q(request_content__icontains=search) | Q(service__service_name__icontains=search))
 
         if status and int(status) != -1:
             feedbacks = feedbacks.filter(status=int(status))
@@ -797,7 +798,7 @@ def feedbacks(request):
             feedbacks = feedbacks.filter(prioritize=int(prioritize))
         
         if date_filter:
-            feedbacks = feedbacks.filter(request_date=dt.strptime(date_filter,'%Y-%m-%d %H:%M:%S'))
+            feedbacks = feedbacks.filter(request_date=dt.strptime(date_filter,'%Y-%m-%d'))
 
         info = []
 
@@ -815,9 +816,9 @@ def feedbacks(request):
             'employee': employee,
             'info': info,
             'search': search if search else "",
-            'status': int(status) if status else 0,
-            'priority': int(prioritize) if prioritize else 0,
-            'date_filter': date_filter if date_filter else dt.today(),     
+            'status': int(status) if status else -1,
+            'priority': int(prioritize) if prioritize else -1,
+            'date_filter': dt.strptime(date_filter, '%Y-%m-%d') if date_filter else dt.now(),     
         }
         return render(request, '../templates/feedback.html', {'context': context})
 
