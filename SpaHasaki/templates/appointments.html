@@ -131,7 +131,7 @@
                             
                                     <!-- Employee Information -->
                                     <div class="my-4 w-full flex flex-row">
-                                        <div class="{% if info.appointment.status == 1 %} w-3/4 {% else %} w-full {% endif%}">
+                                        <div class="{% if info.appointment.status != 2 %} w-3/4 {% else %} w-full {% endif%}">
                                             <h4 class="font-semibold text-lg">Thông tin nhân viên phục vụ</h4>
                                             <div class="border p-4 rounded-lg">
                                                 <li class="grid grid-cols-4">
@@ -152,8 +152,13 @@
                                                 </li>
                                             </div>
                                         </div>
-                                        {% if info.appointment.status == 1 %}
+                                        {% if info.appointment.status != 2 %}
                                         <div class="flex flex-col w-1/4 items-center justify-center ml-5 space-y-2">
+                                            <select name="status{{info.appointment.appointment_id}}" id="status{{info.appointment.appointment_id}}" class="border border-gray-200 rounded">
+                                                <option value="0" {% if info.appointment.status == 0 %} selected {% endif %}>Đã hủy</option>
+                                                <option value="1" {% if info.appointment.status == 1 %} selected {% endif %}>Chưa hoàn thành</option>
+                                                <option value="2" {% if info.appointment.status == 2 %} selected {% endif %}>Đã hoàn thành</option>
+                                            </select>
                                             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                                             <button id="updateStatusButton{{info.appointment.appointment_id}}" data-id="{{info.appointment.appointment_id}}" 
                                                 class="w-32 bg-green-500 rounded p-1" onclick="updateStatus(this)">
@@ -242,6 +247,7 @@
 
     function updateStatus(button){
         const appointmentId = button.getAttribute('data-id');
+        const status = document.getElementById(`status${appointmentId}`).value;
 
         fetch('/schedules', {
             method:'POST',
@@ -251,7 +257,7 @@
             },
             body: JSON.stringify({ 
                 appointment_id: appointmentId,
-                status: 1
+                status: status
             })
         })
         .catch(err => console.log(err))

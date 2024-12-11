@@ -78,7 +78,7 @@
             <ul class="inline-flex items-center space-x-1">
                 {% if customers.has_previous %}
                 <li>
-                    <a href="?page={{ customers.previous_page_number }}&sort={{sort}}" 
+                    <a href="?page={{ customers.previous_page_number }}" 
                         class="px-3 py-2 bg-gray-200 rounded">
                         &lt;Previous
                     </a>
@@ -97,7 +97,7 @@
 
                 {% if customers.has_next %}
                 <li>
-                    <a href="?page={{ customers.next_page_number }}&sort={{sort}}" class="px-3 py-2 bg-gray-200 rounded">
+                    <a href="?page={{ customers.next_page_number }}" class="px-3 py-2 bg-gray-200 rounded">
                         Next &gt;
                     </a>
                 </li>

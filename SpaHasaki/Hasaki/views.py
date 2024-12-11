@@ -617,7 +617,7 @@ def schedules(request):
     appointment_id = data.get('appointment_id')
     appointment = Appointment.objects.filter(appointment_id=appointment_id).first()
     if appointment:
-        appointment.status = AppointmentStatusType.COMPLETE.value
+        appointment.status = int(status)
         appointment.save()
         messages.success(request, 'Cập nhật trạng thái thành công!')
     else:
