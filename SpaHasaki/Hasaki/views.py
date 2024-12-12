@@ -344,7 +344,7 @@ def support(request):
 @csrf_protect
 def register_work_shifts(request):
     employee_id = request.session.get('employee')
-    employee = Employee.objects.get(employee_id=employee_id)
+    employee = Employee.objects.filter(employee_id=employee_id).first()
 
     if request.method == 'GET':
         if not employee_id:
@@ -357,7 +357,7 @@ def register_work_shifts(request):
         return render(request, '../templates/register_work_shifts.html', {'context': context})
     
     shifts_date = request.POST.get('shifts_date')
-    shifts_detail = request.POST.get('shifts_detail')
+    shifts_detail_list = request.POST.getlist('shifts_detail')
 
     if dt.strptime(shifts_date, '%Y-%m-%d').date() < dt.today().date():
         messages.error(request, 'Ngày đăng ký không hợp lệ!')
@@ -368,17 +368,18 @@ def register_work_shifts(request):
         }
         return render(request, '../templates/register_work_shifts.html', {'context': context})
 
-    if int(shifts_detail) < 0:
+    if len(shifts_detail_list) < 0:
         messages.error(request, 'Vui lòng chọn ca làm việc!')
         return redirect(request.META.get('HTTP_REFERER'))
     
-    detail = None
-    if int(shifts_detail) == 0:
-        detail = "Sáng (9h - 13h00)"
-    elif int(shifts_detail) == 1:
-        detail = "Chiều (13h00 - 17h00)"
-    else:
-        detail = "Tối (17h00 - 20h00)"
+    detail_info = []
+    for shifts_detail in shifts_detail_list:
+        if int(shifts_detail) == 0:
+            detail_info.append("Sáng (9h - 13h00)")
+        elif int(shifts_detail) == 1:
+            detail_info.append("Chiều (13h00 - 17h00)")
+        else:
+            detail_info.append("Tối (17h00 - 20h00)")
 
     work_shift = WorkShifts.objects.filter(
         employee_id=employee_id, 
@@ -387,19 +388,24 @@ def register_work_shifts(request):
 
     if work_shift:
         details = [detail for detail in work_shift['shifts_detail'].split(';')]
-        if detail in details:
+        is_exist = False
+        for detail in detail_info:
+            if detail in details:
+                is_exist = True
+
+        if is_exist:
             messages.error(request, 'Vui lòng chọn ca làm khác!')
             return redirect(request.path)
         
         WorkShifts.objects.filter(
             employee_id=employee_id, 
             shifts_date=dt.strptime(shifts_date,'%Y-%m-%d').date()
-        ).update(shifts_detail = work_shift['shifts_detail'] + ';' + detail)
+        ).update(shifts_detail = work_shift['shifts_detail'] + ';' + ';'.join(detail_info))
     else:
         work_shift = WorkShifts(
             employee = employee,
             shifts_date = dt.strptime(shifts_date, '%Y-%m-%d').date(),
-            shifts_detail = detail
+            shifts_detail = ';'.join(detail_info)
         )
         work_shift.save()
 
@@ -411,7 +417,7 @@ def register_work_shifts(request):
             'employee_name': employee.employee_name,
             'phone_number': employee.phone_number,
             'shifts_date': dt.strptime(shifts_date, '%Y-%m-%d').date(),
-            'shifts_detail': detail
+            'shifts_detail': detail_info
         }
     }
     return render(request, '../templates/register_work_shifts.html', {'context': context})
@@ -784,7 +790,8 @@ def feedbacks(request):
         search = request.GET.get('search')
         status = request.GET.get('status')
         prioritize = request.GET.get('prioritize')
-        date_filter = request.GET.get('date_filter')
+        date_filter_from = request.GET.get('date_filter_from')
+        date_filter_to = request.GET.get('date_filter_to')
 
         employee = Employee.objects.get(employee_id=employee_id)
         feedbacks = Feedback.objects.all().order_by('-request_date')
@@ -798,8 +805,11 @@ def feedbacks(request):
         if prioritize and int(prioritize) != -1:
             feedbacks = feedbacks.filter(prioritize=int(prioritize))
         
-        if date_filter:
-            feedbacks = feedbacks.filter(request_date=dt.strptime(date_filter,'%Y-%m-%d'))
+        if date_filter_from:
+            feedbacks = feedbacks.filter(request_date__gte= dt.strptime(date_filter_from,'%Y-%m-%d').date())
+
+        if date_filter_to:
+            feedbacks = feedbacks.filter(request_date__lte= dt.strptime(date_filter_to,'%Y-%m-%d').date())
 
         info = []
 
@@ -819,7 +829,8 @@ def feedbacks(request):
             'search': search if search else "",
             'status': int(status) if status else -1,
             'priority': int(prioritize) if prioritize else -1,
-            'date_filter': dt.strptime(date_filter, '%Y-%m-%d') if date_filter else dt.now(),     
+            'date_filter_from': dt.strptime(date_filter_from, '%Y-%m-%d') if date_filter_from else None,
+            'date_filter_to': dt.strptime(date_filter_to, '%Y-%m-%d') if date_filter_to else None,    
         }
         return render(request, '../templates/feedback.html', {'context': context})
 
